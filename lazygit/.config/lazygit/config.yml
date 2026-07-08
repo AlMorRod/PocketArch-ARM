@@ -1,0 +1,7 @@
+# PocketArch — lazygit config.yml
+# Colores Material Monokai: Fase 6 (esta fase es solo funcional).
+# El editor ya lo toma de $EDITOR=nvim (exportado en zsh/exports.zsh, Fase 2);
+# sin config explícita de "os.edit" acá.
+gui:
+    showIcons: true
+    nerdFontsVersion: "3"
