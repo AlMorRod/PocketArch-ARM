@@ -17,6 +17,9 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
   spec = {
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+    -- Telescope explícito: LazyVim usa snacks.picker por defecto, pero se pidió
+    -- Telescope.nvim en concreto para esta fase.
+    { import = "lazyvim.plugins.extras.editor.telescope" },
     { import = "plugins" },
   },
   defaults = {
