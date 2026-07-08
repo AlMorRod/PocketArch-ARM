@@ -21,6 +21,8 @@ netctl
 nodejs
 npm
 openssh
+python
+python-pip
 ripgrep
 starship
 stow
