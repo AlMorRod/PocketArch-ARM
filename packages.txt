@@ -10,6 +10,7 @@ fd
 fzf
 gcc
 git
+github-cli
 lazygit
 linux-aarch64
 linux-firmware
