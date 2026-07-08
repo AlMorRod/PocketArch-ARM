@@ -1,0 +1,6 @@
+# PocketArch — bat config
+# Tema Material Monokai: adaptado de "Monokai Extended Origin" (mismo linaje
+# clásico Monokai que usa monokai-pro.nvim/filtro "classic") a la paleta del
+# CLAUDE.md. Requiere `bat cache --build` tras cambios en themes/.
+--theme="Material Monokai"
+--italic-text=always
