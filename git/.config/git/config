@@ -1,0 +1,13 @@
+# PocketArch — git config global (lee ~/.config/git/config porque no existe
+# ~/.gitconfig; ver `man git-config`, sección FILES).
+[user]
+	name = ame
+	email = al.mor.rod@gmail.com
+[init]
+	defaultBranch = main
+[pull]
+	rebase = false
+[core]
+	editor = nvim
+[color]
+	ui = auto
