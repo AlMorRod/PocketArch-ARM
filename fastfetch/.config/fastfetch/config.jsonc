@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fastfetch-cli/fastfetch/dev/doc/json_schema.json",
+  "logo": {
+    "type": "none"
+  },
+  "display": {
+    "separator": "  ",
+    "color": {
+      "separator": "#67757c",
+      "output": "#f8f8f2"
+    },
+    "percent": {
+      "color": {
+        "green": "#a6e22e",
+        "yellow": "#e6db74",
+        "red": "#f92672"
+      }
+    }
+  },
+  "modules": [
+    { "type": "os", "key": " OS", "keyColor": "#66d9ef" },
+    { "type": "kernel", "key": " Kernel", "keyColor": "#66d9ef" },
+    { "type": "cpu", "key": " CPU", "keyColor": "#ae81ff" },
+    { "type": "memory", "key": " RAM", "keyColor": "#ae81ff" },
+    { "type": "disk", "key": " Disco", "keyColor": "#fd971f" },
+    { "type": "uptime", "key": " Uptime", "keyColor": "#e6db74" },
+    { "type": "packages", "key": " Paquetes", "keyColor": "#a6e22e" }
+  ]
+}
