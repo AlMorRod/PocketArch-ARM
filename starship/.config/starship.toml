@@ -1,0 +1,52 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+palette = "material_monokai"
+
+format = """
+$directory\
+$git_branch\
+$git_status\
+$python\
+$cmd_duration
+$character"""
+
+[palettes.material_monokai]
+bg = "#1e2327"
+surface = "#232a2e"
+surface_high = "#2c353a"
+fg = "#f8f8f2"
+dim = "#67757c"
+pink = "#f92672"
+orange = "#fd971f"
+yellow = "#e6db74"
+green = "#a6e22e"
+cyan = "#66d9ef"
+purple = "#ae81ff"
+
+[directory]
+style = "fg:cyan bold"
+truncation_length = 3
+truncate_to_repo = true
+
+[git_branch]
+symbol = " "
+style = "fg:purple bold"
+format = "[on $symbol$branch]($style) "
+
+[git_status]
+style = "fg:pink bold"
+format = "([$all_status$ahead_behind]($style)) "
+
+[python]
+symbol = " "
+style = "fg:yellow bold"
+format = "[$symbol$pyenv_prefix($version )(\\($virtualenv\\) )]($style)"
+
+[cmd_duration]
+min_time = 2000
+style = "fg:orange bold"
+format = "took [$duration]($style) "
+
+[character]
+success_symbol = "[❯](fg:green bold)"
+error_symbol = "[❯](fg:pink bold)"
