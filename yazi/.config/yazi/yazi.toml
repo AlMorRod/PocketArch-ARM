@@ -1,0 +1,6 @@
+# Preview, iconos Nerd Font y "abrir con $EDITOR" ya vienen por defecto en
+# yazi (preset yazi-config/preset/yazi-default.toml) — $EDITOR=nvim está
+# exportado desde zsh/exports.zsh (Fase 2), así que Enter/o ya abre en nvim
+# sin necesitar overrides de [opener]/[open] acá.
+[mgr]
+show_hidden = true
