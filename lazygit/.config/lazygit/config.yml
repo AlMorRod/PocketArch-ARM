@@ -1,7 +1,34 @@
 # PocketArch — lazygit config.yml
-# Colores Material Monokai: Fase 6 (esta fase es solo funcional).
+# Tema Material Monokai (paleta fuente única: CLAUDE.md).
 # El editor ya lo toma de $EDITOR=nvim (exportado en zsh/exports.zsh, Fase 2);
 # sin config explícita de "os.edit" acá.
 gui:
     showIcons: true
     nerdFontsVersion: "3"
+    theme:
+        activeBorderColor:
+            - "#66D9EF"
+            - bold
+        inactiveBorderColor:
+            - "#67757C"
+        searchingActiveBorderColor:
+            - "#E6DB74"
+            - bold
+        optionsTextColor:
+            - "#66D9EF"
+        selectedLineBgColor:
+            - "#2C353A"
+        inactiveViewSelectedLineBgColor:
+            - "#232A2E"
+        cherryPickedCommitFgColor:
+            - "#A6E22E"
+        cherryPickedCommitBgColor:
+            - "#2C353A"
+        markedBaseCommitFgColor:
+            - "#FD971F"
+        markedBaseCommitBgColor:
+            - "#2C353A"
+        unstagedChangesColor:
+            - "#F92672"
+        defaultFgColor:
+            - "#F8F8F2"
