@@ -8,10 +8,12 @@ eza
 fastfetch
 fd
 fzf
+gcc
 git
 lazygit
 linux-aarch64
 linux-firmware
+make
 nano
 neovim
 net-tools
@@ -23,6 +25,7 @@ ripgrep
 starship
 stow
 tmux
+tree-sitter-cli
 which
 yazi
 zoxide
