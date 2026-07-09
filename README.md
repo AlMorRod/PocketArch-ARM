@@ -61,6 +61,17 @@ Paquetes: `zsh` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `l
 
 ---
 
+## Capa Termux (host)
+
+Este repo cubre solo la capa **Arch** (gestionada con `pacman` dentro del
+contenedor). Todo lo que vive en la app Termux — Nerd Font, paleta de colores
+del terminal, selector de entorno, manejo de imágenes, Claude Code opcional —
+se gestiona con `pkg` y no es stow-able desde aquí, así que tiene documentación
+propia: **[docs/TERMUX.md](docs/TERMUX.md)**. Si reinstalas Termux, esa guía es
+lo que hay que rehacer antes de tocar este repo.
+
+---
+
 ## Tips de uso
 
 ### Shell (zsh)
