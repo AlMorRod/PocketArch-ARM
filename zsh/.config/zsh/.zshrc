@@ -5,3 +5,6 @@
 
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
+
+# Fastfetch solo en el shell de primer nivel (no en panes de tmux ni shells anidados)
+[[ -z "$TMUX" ]] && (( SHLVL == 1 )) && command -v fastfetch >/dev/null && fastfetch
