@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="176" viewBox="0 0 880 176" role="img" aria-label="TERMUX.md — PocketArch · capa host, todo lo que vive fuera del contenedor">
+  <rect width="880" height="176" rx="14" fill="#1e2327"/>
+  <rect x="0.5" y="0.5" width="879" height="175" rx="13.5" fill="none" stroke="#2c353a"/>
+
+  <!-- chrome de ventana de terminal -->
+  <circle cx="30" cy="28" r="7" fill="#f92672"/>
+  <circle cx="54" cy="28" r="7" fill="#e6db74"/>
+  <circle cx="78" cy="28" r="7" fill="#a6e22e"/>
+  <text x="440" y="33" text-anchor="middle" font-family="ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace" font-size="14" fill="#67757c">~/.termux · host</text>
+  <line x1="1" y1="52" x2="879" y2="52" stroke="#2c353a"/>
+
+  <!-- prompt -->
+  <text x="64" y="104" font-family="ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace" font-size="40" font-weight="700" textLength="216" lengthAdjust="spacingAndGlyphs"><tspan fill="#a6e22e">❯ </tspan><tspan fill="#f8f8f2">Termux</tspan></text>
+  <rect x="288" y="74" width="18" height="34" fill="#f8f8f2">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="1.2s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- subtítulo -->
+  <text x="64" y="136" font-family="ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace" font-size="17" fill="#67757c">capa host · fuente, colores, proot-distro, backups — fuera del contenedor</text>
+
+  <!-- franja de paleta -->
+  <clipPath id="bar"><rect x="64" y="154" width="752" height="6" rx="3"/></clipPath>
+  <g clip-path="url(#bar)">
+    <rect x="64"  y="154" width="126" height="6" fill="#f92672"/>
+    <rect x="189" y="154" width="126" height="6" fill="#fd971f"/>
+    <rect x="314" y="154" width="126" height="6" fill="#e6db74"/>
+    <rect x="439" y="154" width="126" height="6" fill="#a6e22e"/>
+    <rect x="564" y="154" width="126" height="6" fill="#66d9ef"/>
+    <rect x="689" y="154" width="127" height="6" fill="#ae81ff"/>
+  </g>
+</svg>

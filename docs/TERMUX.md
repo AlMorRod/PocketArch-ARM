@@ -1,4 +1,8 @@
-# TERMUX.md — PocketArch (capa host)
+<div align="center">
+
+<img src="../assets/termux-banner.svg" alt="TERMUX.md — PocketArch (capa host)" width="740"/>
+
+</div>
 
 Todo lo que vive **fuera** del contenedor `arch-arm`, en la app Termux.
 
@@ -6,7 +10,7 @@ Esta capa **no** está en el repo de dotfiles (ese es de Arch). Si reinstalas Te
 
 ---
 
-## Las dos capas
+## ❯ Las dos capas
 
 | Capa | Gestor | Qué controla |
 |------|--------|--------------|
@@ -16,9 +20,9 @@ Esta capa **no** está en el repo de dotfiles (ese es de Arch). Si reinstalas Te
 Regla mental: **si se ve o se arranca, es Termux. Si se usa, es Arch.**
 Los colores y la fuente los renderiza Termux, aunque el programa corra dentro de Arch. Por eso `eza`, `bat` y `fastfetch` obedecen a esta capa, no a la otra.
 
----
+<img src="../assets/divider.svg" alt=""/>
 
-# Parte 1 — Configuración de Termux
+# ❯ Parte 1 — Configuración de Termux
 
 ## 1.1 Fuente (Nerd Font)
 
@@ -145,9 +149,9 @@ Notas:
 - Si el shell por defecto de Termux fuera zsh, el snippet va en `~/.zshrc`.
 - Probar sin cerrar Termux: `bash -i`
 
----
+<img src="../assets/divider.svg" alt=""/>
 
-# Parte 2 — Imágenes
+# ❯ Parte 2 — Imágenes
 
 ## 2.1 Cómo funcionan las imágenes en proot-distro
 
@@ -281,9 +285,9 @@ No confundir dos cosas que suenan igual:
 
 La receta es el plan. La imagen es el respaldo. No sustituyas una por la otra.
 
----
+<img src="../assets/divider.svg" alt=""/>
 
-# Parte 3 — Primeros pasos con Claude Code *(opcional)*
+# ❯ Parte 3 — Primeros pasos con Claude Code *(opcional)*
 
 ## 3.1 Por qué lo agregamos
 
@@ -346,18 +350,18 @@ En esa carpeta van `CLAUDE.md` (contexto y permisos del contenedor) y `PocketArc
 Claude Code es un paquete **npm-global, no pacman**: **no aparece en `packages.txt`**.
 Debe ir explícitamente en el `install.sh` del repo de dotfiles, o reconstruirás un entorno sin la herramienta que lo construyó.
 
----
+<img src="../assets/divider.svg" alt=""/>
 
-# Gotchas de esta capa
+# ❯ Gotchas de esta capa
 
 - **Plugins de Termux (`Termux:API`, `Termux:Styling`) deben venir de la misma fuente que Termux** (F-Droid o donde lo instalaste). Si no, fallan por firma.
 - **Sensores (batería, temperatura)** requieren la app `Termux:API` + el paquete `termux-api`. Viven aquí, **no** en el contenedor. Por eso Fastfetch dentro de Arch no los muestra.
 - **`qemu-user-x86-64`** solo hace falta para contenedores x86 emulados. Con `arch-arm` nativo es innecesario: `pkg uninstall qemu-user-x86-64`.
 - **Fastfetch reporta el disco del host Android** (`erofs [Read-only]`), no el del contenedor. Artefacto de PRoot, no un fallo.
 
----
+<img src="../assets/divider.svg" alt=""/>
 
-# Reinstalación desde cero (checklist)
+# ❯ Reinstalación desde cero (checklist)
 
 1. Instalar Termux + plugins desde la misma fuente.
 2. `pkg install -y proot-distro curl unzip`

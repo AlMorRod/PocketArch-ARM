@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="6" viewBox="0 0 880 6" role="presentation">
+  <clipPath id="d"><rect width="880" height="6" rx="3"/></clipPath>
+  <g clip-path="url(#d)">
+    <rect x="0"   width="147" height="6" fill="#f92672"/>
+    <rect x="147" width="147" height="6" fill="#fd971f"/>
+    <rect x="294" width="147" height="6" fill="#e6db74"/>
+    <rect x="441" width="147" height="6" fill="#a6e22e"/>
+    <rect x="588" width="147" height="6" fill="#66d9ef"/>
+    <rect x="735" width="145" height="6" fill="#ae81ff"/>
+  </g>
+</svg>

@@ -15,9 +15,9 @@ Zsh + Starship · Neovim (LazyVim) · Tmux · Yazi · Lazygit · bat/eza/fzf/zox
 
 </div>
 
----
+<img src="assets/divider.svg" alt=""/>
 
-## Despliegue desde cero
+## ❯ Despliegue desde cero
 
 ### 1. Termux (host Android)
 
@@ -68,9 +68,9 @@ Cada carpeta de primer nivel es un "paquete" de [GNU Stow](https://www.gnu.org/s
 que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/dotfiles -t ~ <paquete>`.
 Paquetes: `zsh` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat` · `claude`.
 
----
+<img src="assets/divider.svg" alt=""/>
 
-## Capa Termux (host)
+## ❯ Capa Termux (host)
 
 Este repo cubre solo la capa **Arch** (gestionada con `pacman` dentro del
 contenedor). Todo lo que vive en la app Termux — Nerd Font, paleta de colores
@@ -79,9 +79,9 @@ se gestiona con `pkg` y no es stow-able desde aquí, así que tiene documentaci�
 propia: **[docs/TERMUX.md](docs/TERMUX.md)**. Si reinstalas Termux, esa guía es
 lo que hay que rehacer antes de tocar este repo.
 
----
+<img src="assets/divider.svg" alt=""/>
 
-## Tips de uso
+## ❯ Tips de uso
 
 ### Shell (zsh)
 
@@ -132,9 +132,9 @@ del proyecto.
 - Contenedor roto sin remedio: `proot-distro reset arch-arm` desde Termux y
   re-despliegue con esta guía (~10 min).
 
----
+<img src="assets/divider.svg" alt=""/>
 
-## Gotchas del entorno
+## ❯ Gotchas del entorno
 
 - **No hay systemd** — nada de `systemctl`; los servicios se lanzan a mano.
 - **pacman necesita `DisableSandbox`** — si tras reinstalar aparece un error
@@ -155,7 +155,9 @@ del proyecto.
 - **marksman (LSP Markdown)** necesita `DOTNET_GCHeapHardLimit`; ya viene
   configurado en `nvim/lua/plugins/lang-markdown.lua`.
 
-## Paleta
+<img src="assets/divider.svg" alt=""/>
+
+## ❯ Paleta
 
 <img src="assets/palette.svg" alt="Paleta Material Monokai: fondos, texto y seis acentos" width="740"/>
 
