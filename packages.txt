@@ -3,6 +3,8 @@ base
 bat
 btop
 dhcpcd
+duf
+dust
 ex-vi-compat
 eza
 fastfetch
@@ -25,10 +27,13 @@ openssh
 python
 python-pip
 ripgrep
+rsync
 starship
 stow
+tealdeer
 tmux
 tree-sitter-cli
+uv
 which
 yazi
 zoxide
