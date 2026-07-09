@@ -23,14 +23,17 @@ Zsh + Starship · Neovim (LazyVim) · Tmux · Yazi · Lazygit · bat/eza/fzf/zox
 
 1. Instala [Termux desde F-Droid](https://f-droid.org/packages/com.termux/) (la
    versión de Play Store está desactualizada).
-2. Instala una **Nerd Font** en Termux (los iconos de yazi/lazygit/starship la
-   necesitan): copia el `.ttf` a `~/.termux/font.ttf` y ejecuta
-   `termux-reload-settings`, o usa el addon Termux:Styling.
-3. Instala proot-distro y el contenedor:
+2. Instala una **Nerd Font** y la paleta de colores del terminal (los iconos
+   de yazi/lazygit/starship necesitan la fuente): comandos completos en
+   [docs/TERMUX.md](docs/TERMUX.md), §1.1 y §1.2.
+3. Instala proot-distro y el contenedor. Arch mainline **no publica imagen
+   ARM** (instalarlo por nombre falla); se usa el tarball oficial de
+   **Arch Linux ARM** (detalles en docs/TERMUX.md, Parte 2):
 
 ```sh
 pkg update && pkg install proot-distro
-proot-distro install --override-alias arch-arm archlinux
+proot-distro install --override-alias arch-arm \
+  http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
 proot-distro login arch-arm
 ```
 
@@ -44,7 +47,7 @@ forma idempotente después.
 pacman-key --init && pacman-key --populate archlinuxarm
 
 # PRoot no tiene Landlock: sin esto pacman falla
-sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
+grep -q '^DisableSandbox' /etc/pacman.conf || echo 'DisableSandbox' >> /etc/pacman.conf
 sed -i 's/^DownloadUser/#DownloadUser/' /etc/pacman.conf
 
 pacman -Syu --noconfirm git
@@ -64,8 +67,10 @@ como shell por defecto y sync de plugins de Neovim.
 
 ### Estructura del repo (stow-friendly)
 
-Cada carpeta de primer nivel es un "paquete" de [GNU Stow](https://www.gnu.org/software/stow/)
-que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/dotfiles -t ~ <paquete>`.
+Cada carpeta de primer nivel — salvo `assets/` y `docs/`, que son material del
+repo — es un "paquete" de [GNU Stow](https://www.gnu.org/software/stow/)
+que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/dotfiles -t ~ <paquete>`
+(`install.sh` solo enlaza las carpetas que contienen `.config` o `.claude`).
 Paquetes: `zsh` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat` · `claude`.
 
 <img src="assets/divider.svg" alt=""/>

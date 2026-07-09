@@ -6,7 +6,7 @@
 
 Todo lo que vive **fuera** del contenedor `arch-arm`, en la app Termux.
 
-Esta capa **no** está en el repo de dotfiles (ese es de Arch). Si reinstalas Termux, esto es lo que hay que rehacer — por eso está aquí.
+Las configs de esta capa **no** se versionan en el repo (viven en la app, se gestionan con `pkg` y no son stow-ables); lo único versionado es este documento. Si reinstalas Termux, esto es lo que hay que rehacer — por eso está documentado aparte.
 
 ---
 
@@ -186,6 +186,7 @@ proot-distro install --override-alias arch-arm \
 
 - `--override-alias arch-arm` le da nombre limpio (si no, lo nombra por la URL).
 - Verás un aviso de que la integridad no se puede verificar: **esperado** con imágenes externas, no es un fallo.
+- La URL es `http` a propósito: el certificado TLS del mirror solo cubre `archlinuxarm.org`, no el subdominio `os.` — con `https` la descarga falla por hostname mismatch (verificado 2026-07). No lo "corrijas".
 
 ---
 
