@@ -57,7 +57,7 @@ como shell por defecto y sync de plugins de Neovim.
 
 Cada carpeta de primer nivel es un "paquete" de [GNU Stow](https://www.gnu.org/software/stow/)
 que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/dotfiles -t ~ <paquete>`.
-Paquetes: `zsh` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat`.
+Paquetes: `zsh` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat` · `claude`.
 
 ---
 
@@ -142,3 +142,12 @@ verdad: la tabla en `CLAUDE.md` del proyecto PocketArch. Fondo `#1e2327`,
 texto `#f8f8f2`, acentos `#f92672` / `#fd971f` / `#e6db74` / `#a6e22e` /
 `#66d9ef` / `#ae81ff`. Ninguna config de este repo introduce colores fuera
 de esa tabla.
+
+### Claude Code
+
+El paquete `claude` instala el tema en `~/.claude/themes/material-monokai.json`.
+La selección del tema vive en `~/.claude.json` (no versionado): tras un
+despliegue nuevo, dentro de Claude Code corre `/theme` y elige **Material
+Monokai** (paso manual, una sola vez). Los fondos de diff y los colores de
+subagentes se quedan con los del preset `dark` base: la paleta no tiene
+variantes oscuras tintadas para esos roles.

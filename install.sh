@@ -50,7 +50,7 @@ command -v stow >/dev/null || die "stow no está instalado y no llegó vía pack
 echo "==> Enlazando dotfiles con stow"
 for pkg_dir in */; do
 	pkg="${pkg_dir%/}"
-	[ -d "$pkg/.config" ] || continue
+	[ -d "$pkg/.config" ] || [ -d "$pkg/.claude" ] || continue
 	stow -v "$pkg" || die "stow falló en '$pkg' (¿archivo real en ~/.config chocando con el symlink? muévelo y reintenta)"
 done
 
