@@ -44,7 +44,7 @@ pacman -Syu --noconfirm git
 ### 3. Clonar y ejecutar el instalador
 
 ```sh
-git clone https://github.com/<usuario>/dotfiles.git ~/dotfiles
+git clone https://github.com/AlMorRod/dotfiles.git ~/dotfiles
 cd ~/dotfiles && ./install.sh
 exec zsh
 ```
