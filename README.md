@@ -119,6 +119,15 @@ del proyecto.
 - **No hay systemd** — nada de `systemctl`; los servicios se lanzan a mano.
 - **pacman necesita `DisableSandbox`** — si tras reinstalar aparece un error
   de Landlock, es esto (install.sh ya lo deja configurado).
+- **Keyring propio de Arch Linux ARM** — las firmas vienen de `archlinuxarm`,
+  no del keyring de Arch estándar. Si pacman rechaza firmas en un contenedor
+  nuevo: `pacman-key --init && pacman-key --populate archlinuxarm`
+  (install.sh lo hace si falta).
+- **Mason en ARM funciona** — pyright, ruff, bashls, marksman, etc. tienen
+  builds `aarch64`. Si un binario de Mason falla raro, la causa histórica no
+  fue falta de soporte ARM sino **contaminación del `PATH` con el toolchain
+  de Termux** (binarios bionic del host). Asegúrate de que `gcc`, `make` y
+  `python` resuelvan a los del contenedor (`command -v gcc` → `/usr/bin/gcc`).
 - **Batería/temperatura no existen en el contenedor** — los sensores viven en
   Termux (termux-api); fastfetch los omite a propósito.
 - **La Nerd Font es de Termux**, no del contenedor: un icono que no renderiza
