@@ -1,10 +1,19 @@
-# dotfiles — PocketArch
+<div align="center">
+
+<img src="assets/banner.svg" alt="PocketArch — dotfiles" width="740"/>
+
+[![Arch Linux ARM](https://img.shields.io/badge/Arch_Linux-ARM-f92672?style=flat-square&logo=archlinux&logoColor=f8f8f2&labelColor=232a2e)](https://archlinuxarm.org)
+![aarch64](https://img.shields.io/badge/aarch64-nativo-66d9ef?style=flat-square&logo=arm&logoColor=f8f8f2&labelColor=232a2e)
+[![Termux](https://img.shields.io/badge/Termux-host-a6e22e?style=flat-square&logoColor=f8f8f2&labelColor=232a2e)](https://termux.dev)
+![Material Monokai](https://img.shields.io/badge/tema-Material_Monokai-ae81ff?style=flat-square&labelColor=232a2e)
 
 Entorno de desarrollo Linux portátil, 100% CLI, sobre **Termux + Arch Linux ARM**
 (PRoot, `aarch64` nativo, sin emulación). Minimalista, rápido, reproducible, y con
 identidad visual **Material Monokai** en todas las herramientas.
 
 Zsh + Starship · Neovim (LazyVim) · Tmux · Yazi · Lazygit · bat/eza/fzf/zoxide/rg/fd · Fastfetch
+
+</div>
 
 ---
 
@@ -147,6 +156,8 @@ del proyecto.
   configurado en `nvim/lua/plugins/lang-markdown.lua`.
 
 ## Paleta
+
+<img src="assets/palette.svg" alt="Paleta Material Monokai: fondos, texto y seis acentos" width="740"/>
 
 Material Monokai, mapeada a mano (no existe port oficial). Fuente única de
 verdad: la tabla en `CLAUDE.md` del proyecto PocketArch. Fondo `#1e2327`,

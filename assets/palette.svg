@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="144" viewBox="0 0 880 144" role="img" aria-label="Paleta Material Monokai: 11 colores, del fondo #1e2327 al púrpura #ae81ff">
+  <rect width="880" height="144" rx="14" fill="#1e2327"/>
+  <rect x="0.5" y="0.5" width="879" height="143" rx="13.5" fill="none" stroke="#2c353a"/>
+
+  <g stroke="#2c353a">
+    <rect x="26"  y="24" width="68" height="56" rx="8" fill="#1e2327"/>
+    <rect x="102" y="24" width="68" height="56" rx="8" fill="#232a2e"/>
+    <rect x="178" y="24" width="68" height="56" rx="8" fill="#2c353a"/>
+    <rect x="254" y="24" width="68" height="56" rx="8" fill="#f8f8f2"/>
+    <rect x="330" y="24" width="68" height="56" rx="8" fill="#67757c"/>
+    <rect x="406" y="24" width="68" height="56" rx="8" fill="#f92672"/>
+    <rect x="482" y="24" width="68" height="56" rx="8" fill="#fd971f"/>
+    <rect x="558" y="24" width="68" height="56" rx="8" fill="#e6db74"/>
+    <rect x="634" y="24" width="68" height="56" rx="8" fill="#a6e22e"/>
+    <rect x="710" y="24" width="68" height="56" rx="8" fill="#66d9ef"/>
+    <rect x="786" y="24" width="68" height="56" rx="8" fill="#ae81ff"/>
+  </g>
+
+  <g font-family="ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace" font-size="12" fill="#67757c" text-anchor="middle">
+    <text x="60"  y="112">#1e2327</text>
+    <text x="136" y="112">#232a2e</text>
+    <text x="212" y="112">#2c353a</text>
+    <text x="288" y="112">#f8f8f2</text>
+    <text x="364" y="112">#67757c</text>
+    <text x="440" y="112">#f92672</text>
+    <text x="516" y="112">#fd971f</text>
+    <text x="592" y="112">#e6db74</text>
+    <text x="668" y="112">#a6e22e</text>
+    <text x="744" y="112">#66d9ef</text>
+    <text x="820" y="112">#ae81ff</text>
+  </g>
+</svg>
