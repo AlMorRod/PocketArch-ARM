@@ -160,7 +160,7 @@ En la versión **5.4.0** hay dos formas de instalar:
 1. **Por nombre** → `proot-distro install ubuntu:24.04`
    Resuelve contra el registro **OCI/Docker**. Depende de que la imagen publique build para tu arquitectura.
 2. **Por URL de tarball** → `proot-distro install <url.tar.gz>`
-   Cualquier rootfs comprimido. Es lo que usamos nosotros.
+   Cualquier rootfs comprimido. Es la vía que usa PocketArch, con la imagen oficial de Arch Linux ARM.
 
 > ⚠ **No existe un comando que liste las distros instalables.** `proot-distro list` solo muestra las que ya tienes. El catálogo "disponible" es, en la práctica, lo que haya en el registro OCI o el tarball que le des.
 
@@ -175,7 +175,7 @@ Arch mainline **solo existe para x86_64**. Correrlo en el teléfono exige `qemu-
 
 ---
 
-## 2.2 Descargar e instalar (la nuestra)
+## 2.2 Descargar e instalar (Arch Linux ARM)
 
 ```bash
 pkg install -y proot-distro
