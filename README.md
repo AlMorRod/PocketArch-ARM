@@ -71,7 +71,7 @@ Cada carpeta de primer nivel — salvo `assets/` y `docs/`, que son material del
 repo — es un "paquete" de [GNU Stow](https://www.gnu.org/software/stow/)
 que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/dotfiles -t ~ <paquete>`
 (`install.sh` solo enlaza las carpetas que contienen `.config` o `.claude`).
-Paquetes: `zsh` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat` · `claude`.
+Paquetes: `zsh` · `shell` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat` · `claude`.
 
 <img src="assets/divider.svg" alt=""/>
 
@@ -101,10 +101,16 @@ lo que hay que rehacer antes de tocar este repo.
 | `mkcd dir` | crea el directorio y entra |
 | `weather [ciudad]` | clima compacto vía wttr.in |
 | `backup archivo` | copia `archivo.AAAAMMDD-HHMMSS.bak` junto al original |
+| `reels <link>…` | descarga y transcribe reels de Instagram ([media-transcribe](https://github.com/AlMorRod/media-transcribe)) |
+| `yt <url> [--force]…` | descarga (mp4+mp3) y transcribe vídeos de YouTube |
 
 Historial: 50k entradas, deduplicado y compartido entre sesiones. La config
 vive en archivos fuente (`aliases.zsh`, `functions.zsh`, `history.zsh`,
 `exports.zsh`) bajo `~/.config/zsh/`, no en un `.zshrc` monolítico.
+
+Los **alias portables** (compatibles con bash *y* zsh) viven en el paquete
+`shell`: `~/.config/shell/aliases.sh`. Lo cargan tanto `~/.bashrc` como el
+`.zshrc` de zsh, así que funcionan en cualquiera de los dos shells.
 
 ### Tmux
 
