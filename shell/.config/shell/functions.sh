@@ -4,7 +4,7 @@
 # dotfiles-sync-docs — recopia los manuales del repo de dotfiles al vault de
 # Obsidian (carpeta 01_Core_Geofront/Dotfiles). Úsalo tras actualizar el repo.
 dotfiles-sync-docs() {
-	src="$HOME/PocketArch-ARM"
+	src="$HOME/.pocket-arch"
 	dst="/storage/emulated/0/Obsidian/01_Core_Geofront/Dotfiles"
 	[ -f "$src/README.md" ] || { echo "✗ No encuentro $src/README.md" >&2; return 1; }
 	mkdir -p "$dst/assets" || return 1

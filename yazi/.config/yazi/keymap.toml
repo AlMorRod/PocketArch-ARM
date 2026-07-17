@@ -1,8 +1,8 @@
 # Atajos personalizados (append: no pisan los defaults de yazi).
 [[mgr.append_keymap]]
 on   = [ "g", "D" ]
-run  = "cd ~/PocketArch-ARM"
-desc = "Go ~/PocketArch-ARM"
+run  = "cd ~/.pocket-arch"
+desc = "Go ~/.pocket-arch"
 
 [[mgr.append_keymap]]
 on   = [ "g", "p" ]

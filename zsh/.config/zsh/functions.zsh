@@ -1,6 +1,6 @@
 # update: actualiza el sistema y regenera packages.txt en dotfiles
 update() {
-  pacman -Syu "$@" && pacman -Qqe > "$HOME/PocketArch-ARM/packages.txt" \
+  pacman -Syu "$@" && pacman -Qqe > "$HOME/.pocket-arch/packages.txt" \
     && echo "packages.txt regenerado"
 }
 
