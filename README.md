@@ -103,14 +103,16 @@ lo que hay que rehacer antes de tocar este repo.
 | `backup archivo` | copia `archivo.AAAAMMDD-HHMMSS.bak` junto al original |
 | `reels <link>…` | descarga y transcribe reels de Instagram ([media-transcribe](https://github.com/AlMorRod/media-transcribe)) |
 | `yt <url> [--force]…` | descarga (mp4+mp3) y transcribe vídeos de YouTube |
+| `dotfiles-sync-docs` | recopia los manuales del repo (`README`, `TERMUX`) al vault de Obsidian |
 
 Historial: 50k entradas, deduplicado y compartido entre sesiones. La config
 vive en archivos fuente (`aliases.zsh`, `functions.zsh`, `history.zsh`,
 `exports.zsh`) bajo `~/.config/zsh/`, no en un `.zshrc` monolítico.
 
-Los **alias portables** (compatibles con bash *y* zsh) viven en el paquete
-`shell`: `~/.config/shell/aliases.sh`. Lo cargan tanto `~/.bashrc` como el
-`.zshrc` de zsh, así que funcionan en cualquiera de los dos shells.
+Los **alias y funciones portables** (compatibles con bash *y* zsh) viven en el
+paquete `shell`: `~/.config/shell/aliases.sh` y `~/.config/shell/functions.sh`.
+Los cargan tanto `~/.bashrc` como el `.zshrc` de zsh, así que funcionan en
+cualquiera de los dos shells.
 
 ### Tmux
 
