@@ -50,8 +50,20 @@ pacman-key --init && pacman-key --populate archlinuxarm
 grep -q '^DisableSandbox' /etc/pacman.conf || echo 'DisableSandbox' >> /etc/pacman.conf
 sed -i 's/^DownloadUser/#DownloadUser/' /etc/pacman.conf
 
-pacman -Syu --noconfirm git
+pacman -Syu --noconfirm git github-cli
 ```
+
+Autentícate en GitHub con `gh` (necesario para el clon por SSH del paso 3):
+
+```sh
+gh auth login
+```
+
+> [!TIP]
+> Cuando `gh auth login` pregunte *"How would you like to authenticate Git
+> operations?"*, elige **SSH** (no HTTPS). `gh` genera la llave y la sube a tu
+> cuenta, así el `git clone git@github.com:…` del paso 3 funciona sin configurar
+> llaves a mano.
 
 ### 3. Clonar y ejecutar el instalador
 
