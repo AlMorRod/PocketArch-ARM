@@ -53,7 +53,10 @@ sed -i 's/^DownloadUser/#DownloadUser/' /etc/pacman.conf
 pacman -Syu --noconfirm git github-cli
 ```
 
-Autentícate en GitHub con `gh` (necesario para el clon por SSH del paso 3):
+### 3. Autenticar en GitHub por SSH (antes de clonar)
+
+El repo se clona por SSH (paso 4), así que la autenticación va **primero**: sin
+ella el `git clone git@github.com:…` falla con *Permission denied (publickey)*.
 
 ```sh
 gh auth login
@@ -62,10 +65,9 @@ gh auth login
 > [!TIP]
 > Cuando `gh auth login` pregunte *"How would you like to authenticate Git
 > operations?"*, elige **SSH** (no HTTPS). `gh` genera la llave y la sube a tu
-> cuenta, así el `git clone git@github.com:…` del paso 3 funciona sin configurar
-> llaves a mano.
+> cuenta, así el clon del paso 4 funciona sin configurar llaves a mano.
 
-### 3. Clonar y ejecutar el instalador
+### 4. Clonar y ejecutar el instalador
 
 ```sh
 git clone git@github.com:AlMorRod/PocketArch-ARM.git ~/.pocket-arch
