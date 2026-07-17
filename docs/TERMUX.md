@@ -281,7 +281,7 @@ proot-distro remove arch-arm
 
 No confundir dos cosas que suenan igual:
 
-- **`~/dotfiles` + `install.sh` (dentro de Arch)** → la **receta**. Versionada, legible, evoluciona. Es cómo se replica PocketArch de verdad.
+- **`~/PocketArch-ARM` + `install.sh` (dentro de Arch)** → la **receta**. Versionada, legible, evoluciona. Es cómo se replica PocketArch de verdad.
 - **`proot-distro backup` (tar.gz)** → el **paracaídas**. Foto opaca y pesada de un momento. Sirve si el contenedor se corrompe y no quieres reconstruir.
 
 La receta es el plan. La imagen es el respaldo. No sustituyas una por la otra.
@@ -296,7 +296,7 @@ PocketArch funciona perfectamente sin esto. Se añadió por una razón concreta:
 
 El entorno se puede configurar a mano, siguiendo una guía y editando cada archivo con `nano`. Pero entonces la config queda escrita suelta en `~/.config`, y luego hay que rehacerla para meterla en el repo de dotfiles. Config a mano ≠ config reproducible.
 
-Claude Code ejecuta las fases del plan escribiendo cada archivo **directo en `~/dotfiles`** y enlazándolo con `stow`. Un solo flujo: configurado y versionado a la vez. Además el contenedor es aislado y desechable (`proot-distro reset`), así que darle permisos amplios tiene un costo bajo.
+Claude Code ejecuta las fases del plan escribiendo cada archivo **directo en `~/PocketArch-ARM`** y enlazándolo con `stow`. Un solo flujo: configurado y versionado a la vez. Además el contenedor es aislado y desechable (`proot-distro reset`), así que darle permisos amplios tiene un costo bajo.
 
 Es opcional: si prefieres configurar a mano, salta esta parte y trabaja siempre dentro del repo de dotfiles.
 

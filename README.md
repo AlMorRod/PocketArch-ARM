@@ -56,8 +56,8 @@ pacman -Syu --noconfirm git
 ### 3. Clonar y ejecutar el instalador
 
 ```sh
-git clone https://github.com/AlMorRod/dotfiles.git ~/dotfiles
-cd ~/dotfiles && ./install.sh
+git clone https://github.com/AlMorRod/PocketArch-ARM.git ~/PocketArch-ARM
+cd ~/PocketArch-ARM && ./install.sh
 exec zsh
 ```
 
@@ -69,7 +69,7 @@ como shell por defecto y sync de plugins de Neovim.
 
 Cada carpeta de primer nivel — salvo `assets/` y `docs/`, que son material del
 repo — es un "paquete" de [GNU Stow](https://www.gnu.org/software/stow/)
-que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/dotfiles -t ~ <paquete>`
+que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/PocketArch-ARM -t ~ <paquete>`
 (`install.sh` solo enlaza las carpetas que contienen `.config` o `.claude`).
 Paquetes: `zsh` · `shell` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat` · `claude`.
 
@@ -124,7 +124,7 @@ Prefix por defecto (`C-b`). Mouse activado, ventanas desde 1.
 
 ### Yazi
 
-- `g` `D` — ir a `~/dotfiles` · `g` `p` — ir a `~/project`
+- `g` `D` — ir a `~/PocketArch-ARM` · `g` `p` — ir a `~/project`
 - `g` `l` — abrir **lazygit** en el directorio actual
 - `Enter` sobre un archivo de texto lo abre en Neovim (`$EDITOR`)
 
@@ -137,10 +137,10 @@ del proyecto.
 
 ### Mantenimiento
 
-- **Toda config nueva entra al repo**: crea `dotfiles/<pkg>/.config/...`,
+- **Toda config nueva entra al repo**: crea `PocketArch-ARM/<pkg>/.config/...`,
   enlaza con `stow <pkg>` y commitea. Nada de config "a mano" sin versionar.
 - Instala paquetes con `pacman -S ...` y luego corre `update` (o
-  `pacman -Qqe > ~/dotfiles/packages.txt`) para dejarlo registrado.
+  `pacman -Qqe > ~/PocketArch-ARM/packages.txt`) para dejarlo registrado.
 - Commits atómicos con mensaje claro: cada cambio de config reversible.
 - Contenedor roto sin remedio: `proot-distro reset arch-arm` desde Termux y
   re-despliegue con esta guía (~10 min).
