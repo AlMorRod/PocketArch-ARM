@@ -249,8 +249,11 @@ proot-distro remove arch-arm && make container bootstrap install
 - **Orden del selector** — `make termux` instala el selector, pero solo se
   activa con `~/.config/pocketarch/ready`, que escribe un `make install`
   completo tras comprobar que Arch responde. `make bootstrap` y
-  `make install` borran la marca al empezar. Salir de Arch con error o por
-  señal vuelve a la shell de Termux.
+  `make install` borran la marca al empezar. Al salir de geofront con éxito
+  se entra a Arch (solo con la marca). Una salida 0 de Arch cierra la
+  sesión de Termux; cualquier otro código o una señal muestra el motivo y
+  conserva la sesión. `exit` hereda el código del último comando, así que
+  `exit 0` fuerza el cierre.
 - **No hay systemd** — nada de `systemctl`; los servicios se lanzan a mano.
 - **Mason en ARM funciona** — pyright, ruff, bashls, marksman, etc. tienen
   builds `aarch64`. Si un binario de Mason falla raro, revisa el PATH (arriba).

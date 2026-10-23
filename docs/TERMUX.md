@@ -69,6 +69,7 @@ Con `~/.config/pocketarch/ready` (la escribe `make install`):
 | `a`, Enter o 5 s sin tecla | Arch (`pocketarch`) |
 | `g` | geofront: `mosh geo -- tmux new -As main`; si falla, `ssh -t geo 'tmux new -As main'`; si ambos fallan, vuelve al menú |
 | `t` | Termux local (no figura en el menú) |
+| al salir | geofront con éxito → Arch (solo con la marca) · Arch con 0 → cierra la sesión de Termux · otro código o una señal → muestra el motivo y conserva la sesión (`exit` hereda el código del último comando; `exit 0` fuerza el cierre) |
 
 Sin la marca, una línea indica el paso que falta y queda la shell de Termux.
 
