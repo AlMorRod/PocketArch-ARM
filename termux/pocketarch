@@ -1,0 +1,73 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# PocketArch — envoltorio único de `proot-distro login` (corre en Termux).
+# Lo usan el Makefile, el alias `arch` y el selector de arranque.
+#
+#   pocketarch [opciones de login] [-- comando…]   entra al contenedor
+#   pocketarch --probe                             sonda de link2symlink
+#   pocketarch --installed                         ¿existe el contenedor?
+#
+# La emulación de enlaces duros de proot (link2symlink) tumba la sesión con
+# signal 11 en algunos dispositivos. La sonda guarda en $STATE "on" si
+# funciona u "off" si no; sin resultado se asume "off" (con
+# --no-link2symlink un `ln` devuelve EPERM en vez de tumbar la sesión).
+set -euo pipefail
+
+ALIAS=arch-arm
+STATE="${XDG_CONFIG_HOME:-$HOME/.config}/pocketarch/link2symlink"
+
+die() {
+	echo "ERROR: $*" >&2
+	exit 1
+}
+
+installed() {
+	# Sin -q: grep saldría antes y pipefail daría falso negativo por SIGPIPE.
+	proot-distro list -q 2>/dev/null | grep -x "$ALIAS" >/dev/null
+}
+
+probe() {
+	installed || die "el contenedor $ALIAS no existe (make container)"
+	# Ruta fija dentro del contenedor: si la sesión de la sonda cae, la limpia
+	# una segunda sesión con --no-link2symlink.
+	PROBE_DIR="/var/tmp/.pocketarch-probe.$$"
+	local rc=0
+	trap 'proot-distro login --no-link2symlink "$ALIAS" -- rm -rf "$PROBE_DIR" || true' EXIT
+	echo "==> Sonda de link2symlink (un ln en $ALIAS, sin --no-link2symlink)"
+	# shellcheck disable=SC2016 # $1 se expande dentro del contenedor
+	proot-distro login "$ALIAS" -- /bin/sh -c \
+		'mkdir -p "$1" && : >"$1/a" && ln "$1/a" "$1/b"' sh "$PROBE_DIR" || rc=$?
+	mkdir -p "$(dirname "$STATE")"
+	if [ "$rc" -eq 0 ]; then
+		echo on >"$STATE"
+		echo "==> link2symlink funciona: se usa la opción por defecto"
+	else
+		echo off >"$STATE"
+		echo "==> link2symlink falla (salida $rc): se usa --no-link2symlink"
+	fi
+}
+
+case "${1:-}" in
+--probe)
+	probe
+	exit
+	;;
+--installed)
+	installed
+	exit
+	;;
+-h | --help)
+	sed -n '2,12s/^# \{0,1\}//p' "$0"
+	exit
+	;;
+esac
+
+flags=(--no-link2symlink)
+[ "$(cat "$STATE" 2>/dev/null)" = on ] && flags=()
+
+opts=()
+while [ $# -gt 0 ] && [ "$1" != -- ]; do
+	opts+=("$1")
+	shift
+done
+
+exec proot-distro login "${flags[@]}" "${opts[@]}" "$ALIAS" "$@"
