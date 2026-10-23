@@ -40,8 +40,10 @@ for pkg_dir in */; do
 done
 
 # --- 6. Zsh como shell por defecto ---
+# Se compara con /etc/passwd: $SHELL refleja la sesión actual, no la cuenta.
 zsh_path="$(command -v zsh)"
-if [ "${SHELL:-}" != "$zsh_path" ]; then
+login_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
+if [ "$login_shell" != "$zsh_path" ]; then
 	echo "==> Estableciendo zsh como shell por defecto"
 	chsh -s "$zsh_path"
 fi
