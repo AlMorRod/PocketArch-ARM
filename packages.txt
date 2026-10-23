@@ -13,6 +13,7 @@ fzf
 gcc
 git
 github-cli
+jq
 lazygit
 linux-aarch64
 linux-firmware

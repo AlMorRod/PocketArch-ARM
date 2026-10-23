@@ -202,3 +202,17 @@ despliegue nuevo, dentro de Claude Code corre `/theme` y elige **Material
 Monokai** (paso manual, una sola vez). Los fondos de diff y los colores de
 subagentes se quedan con los del preset `dark` base: la paleta no tiene
 variantes oscuras tintadas para esos roles.
+
+La statusline (`~/.claude/statusline.sh`, activada en `settings.json`)
+muestra en una línea:
+
+| Segmento | Contenido |
+|----------|-----------|
+| Modelo | nombre del modelo de la sesión |
+| `5h` / `7d` | uso de los límites de 5 horas y 7 días: barra, porcentaje y tiempo hasta el reinicio (`↻`) |
+| `ctx` | tokens en contexto / tamaño de la ventana, y porcentaje usado |
+| `$` | costo acumulado de la sesión en USD |
+
+Barras y porcentajes en verde (< 50 %), amarillo (≥ 50 %) y rosa (≥ 80 %).
+Los segmentos `5h`/`7d` requieren plan **Pro o Max**; sin ellos la línea
+muestra modelo, contexto y costo. La statusline requiere `jq` (en `packages.txt`).

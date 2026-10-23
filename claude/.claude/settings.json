@@ -1,0 +1,7 @@
+{
+  "theme": "custom:material-monokai",
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline.sh"
+  }
+}
