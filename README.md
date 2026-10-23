@@ -19,84 +19,71 @@ Zsh + Starship · Neovim (LazyVim) · Tmux · Yazi · Lazygit · bat/eza/fzf/zox
 
 ## ❯ Despliegue desde cero
 
-### 1. Termux (host Android)
+El despliegue completo se ejecuta **desde Termux** con `make`, sobre una
+copia del repo en `~/PocketArch-ARM`. Cada objetivo es idempotente.
+
+### 1. Prerrequisitos en Termux
 
 1. Instala [Termux desde F-Droid](https://f-droid.org/packages/com.termux/) (la
    versión de Play Store está desactualizada).
-2. Instala una **Nerd Font** y la paleta de colores del terminal (los iconos
-   de yazi/lazygit/starship necesitan la fuente): comandos completos en
-   [docs/TERMUX.md](docs/TERMUX.md), §1.1 y §1.2.
-3. Instala proot-distro y el contenedor. Arch mainline **no publica imagen
-   ARM** (instalarlo por nombre falla); se usa el tarball oficial de
-   **Arch Linux ARM** (detalles en docs/TERMUX.md, Parte 2):
+2. El repo es privado: se clona con `gh`, autenticado por HTTPS.
 
 ```sh
-pkg update && pkg install proot-distro
-proot-distro install --override-alias arch-arm \
-  http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
-proot-distro login arch-arm
-```
-
-### 2. Bootstrap mínimo (dentro del contenedor)
-
-Solo lo imprescindible para poder clonar; `install.sh` re-hace estos pasos de
-forma idempotente después.
-
-```sh
-# Keyring de Arch Linux ARM
-pacman-key --init && pacman-key --populate archlinuxarm
-
-# PRoot no tiene Landlock: sin esto pacman falla
-grep -q '^DisableSandbox' /etc/pacman.conf || echo 'DisableSandbox' >> /etc/pacman.conf
-sed -i 's/^DownloadUser/#DownloadUser/' /etc/pacman.conf
-
-pacman -Syu --noconfirm git github-cli
-```
-
-### 3. Autenticar en GitHub por SSH (antes de clonar)
-
-El repo se clona por SSH (paso 4), así que la autenticación va **primero**: sin
-ella el `git clone git@github.com:…` falla con *Permission denied (publickey)*.
-
-```sh
+pkg update && pkg install gh git make proot-distro curl unzip
 gh auth login
+gh repo clone AlMorRod/PocketArch-ARM ~/PocketArch-ARM
 ```
 
-> [!TIP]
-> Cuando `gh auth login` pregunte *"How would you like to authenticate Git
-> operations?"*, elige **SSH** (no HTTPS). `gh` genera la llave y la sube a tu
-> cuenta, así el clon del paso 4 funciona sin configurar llaves a mano.
-
-### 4. Clonar y ejecutar el instalador
+### 2. Desplegar
 
 ```sh
-git clone git@github.com:AlMorRod/PocketArch-ARM.git ~/.pocket-arch
-cd ~/.pocket-arch && ./install.sh
-exec zsh
+cd ~/PocketArch-ARM && make
 ```
 
-`install.sh` es **idempotente** (re-ejecutable sin romper nada): keyring,
-pacman.conf, paquetes de `packages.txt` (`--needed`), symlinks vía stow, zsh
-como shell por defecto y sync de plugins de Neovim.
+| Objetivo | Qué hace |
+|----------|----------|
+| `make termux` | paquetes de Termux (openssh, mosh), Nerd Font, `colors.properties`, `termux-setup-storage`, comando `pocketarch`, bloque gestionado en `~/.bashrc` (alias `arch` y selector) y `Host geo` en `~/.ssh/config` |
+| `make container` | instala `arch-arm` desde el tarball oficial de Arch Linux ARM, comprueba `aarch64` y ejecuta la sonda de link2symlink |
+| `make bootstrap` | dentro del contenedor: keyring de ALARM, sandbox de pacman desactivado y `pacman -Syu` con git |
+| `make install` | clona o actualiza `~/.pocket-arch` dentro del contenedor desde `~/PocketArch-ARM` y ejecuta `install.sh` |
+| `make` / `make all` | los cuatro, en ese orden |
+| `make probe` | repite la sonda de link2symlink |
+
+`make install` lleva al contenedor los **commits** de la copia de Termux (no
+los cambios sin commitear) y avanza solo en fast-forward. El clon del
+contenedor tiene `origin` en `git@github.com:AlMorRod/PocketArch-ARM.git`;
+para hacer push desde dentro, autentica allí con `gh auth login` y elige
+**SSH** cuando pregunte por las operaciones de Git.
+
+`install.sh` es idempotente: bootstrap (`scripts/bootstrap.sh`), paquetes de
+`packages.txt` (`--needed`), symlinks vía stow, zsh como shell de login,
+Claude Code (instalador nativo) y sync de plugins de Neovim. También se
+ejecuta a mano dentro del contenedor: `~/.pocket-arch/install.sh`.
+
+Detalle de cada pieza de la capa Termux en [docs/TERMUX.md](docs/TERMUX.md).
 
 ### Estructura del repo (stow-friendly)
 
-Cada carpeta de primer nivel — salvo `assets/` y `docs/`, que son material del
-repo — es un "paquete" de [GNU Stow](https://www.gnu.org/software/stow/)
+Cada carpeta de primer nivel — salvo `assets/`, `docs/`, `scripts/` y
+`termux/`, que son material del repo — es un "paquete" de [GNU Stow](https://www.gnu.org/software/stow/)
 que replica la ruta desde `$HOME`; se enlaza con `stow -d ~/.pocket-arch -t ~ <paquete>`
 (`install.sh` solo enlaza las carpetas que contienen `.config` o `.claude`).
 Paquetes: `zsh` · `shell` · `starship` · `fastfetch` · `nvim` · `tmux` · `yazi` · `lazygit` · `git` · `bat` · `claude`.
+
+| Fuera de stow | Contenido |
+|---------------|-----------|
+| `Makefile` | despliegue desde Termux |
+| `scripts/` | `bootstrap.sh` (pacman operativo bajo PRoot) y `sync-repo.sh` (repo de Termux → contenedor) |
+| `termux/` | capa Termux: envoltorio `pocketarch`, selector (`bashrc.sh`) y `colors.properties` |
 
 <img src="assets/divider.svg" alt=""/>
 
 ## ❯ Capa Termux (host)
 
-Este repo cubre solo la capa **Arch** (gestionada con `pacman` dentro del
-contenedor). Todo lo que vive en la app Termux — Nerd Font, paleta de colores
-del terminal, selector de entorno, manejo de imágenes, Claude Code opcional —
-se gestiona con `pkg` y no es stow-able desde aquí, así que tiene documentación
-propia: **[docs/TERMUX.md](docs/TERMUX.md)**. Si reinstalas Termux, esa guía es
-lo que hay que rehacer antes de tocar este repo.
+El contenedor se gestiona con `pacman`; la app Termux, con `pkg`. Lo que
+vive en Termux — Nerd Font, paleta del terminal, envoltorio `pocketarch`,
+selector de arranque, alias `geo` — está en `termux/` y lo aplica
+`make termux`. Referencia completa: **[docs/TERMUX.md](docs/TERMUX.md)**.
 
 <img src="assets/divider.svg" alt=""/>
 
@@ -157,22 +144,34 @@ del proyecto.
   `pacman -Qqe > ~/.pocket-arch/packages.txt`) para dejarlo registrado.
 - Commits atómicos con mensaje claro: cada cambio de config reversible.
 - Contenedor roto sin remedio: `proot-distro reset arch-arm` desde Termux y
-  re-despliegue con esta guía (~10 min).
+  `make container bootstrap install` (~10 min).
 
 <img src="assets/divider.svg" alt=""/>
 
 ## ❯ Gotchas del entorno
 
 - **No hay systemd** — nada de `systemctl`; los servicios se lanzan a mano.
-- **pacman necesita `DisableSandbox`** — si tras reinstalar aparece un error
-  de Landlock, es esto (install.sh ya lo deja configurado).
+- **Enlaces duros bajo PRoot** — en algunos dispositivos la emulación de
+  enlaces duros de proot (link2symlink) tumba la sesión con *signal 11* ante
+  cualquier `ln`; con `proot-distro login --no-link2symlink` el `ln` devuelve
+  EPERM y la sesión sigue. La decisión es por dispositivo: la toma la sonda
+  de `make container` y la aplica `pocketarch`. Entra siempre con `arch` o
+  `pocketarch`, no con `proot-distro login` a pelo. Por la misma razón el
+  repo se clona con `git clone --no-hardlinks`.
+- **gpg necesita `lock-never`** — gpg crea sus archivos de bloqueo con
+  enlaces duros, y `pacman-key --init` cae con *signal 11*. `bootstrap.sh`
+  escribe `lock-never` en `/etc/pacman.d/gnupg/gpg.conf` antes del `--init`
+  y lo mantiene; el keyring está completo cuando existe `trustdb.gpg`.
+- **Sandbox de pacman desactivado** — el sandbox de descarga falla bajo PRoot
+  (`Landlock is not supported by the kernel`). Van activas en `[options]` las
+  directivas `DisableSandboxFilesystem` y `DisableSandboxSyscalls`, que la
+  plantilla de `pacman.conf` trae comentadas (`DisableSandbox` equivale a las
+  dos). Comprobación: `pacman-conf | grep DisableSandbox`.
 - **Keyring propio de Arch Linux ARM** — las firmas vienen de `archlinuxarm`,
-  no del keyring de Arch estándar. Si pacman rechaza firmas en un contenedor
-  nuevo: `pacman-key --init && pacman-key --populate archlinuxarm`
-  (install.sh lo hace si falta).
+  no del keyring de Arch estándar (`pacman-key --populate archlinuxarm`).
 - **Mason en ARM funciona** — pyright, ruff, bashls, marksman, etc. tienen
-  builds `aarch64`. Si un binario de Mason falla raro, la causa histórica no
-  fue falta de soporte ARM sino **contaminación del `PATH` con el toolchain
+  builds `aarch64`. Si un binario de Mason falla raro, la causa no es falta
+  de soporte ARM sino **contaminación del `PATH` con el toolchain
   de Termux** (binarios bionic del host). Asegúrate de que `gcc`, `make` y
   `python` resuelvan a los del contenedor (`command -v gcc` → `/usr/bin/gcc`).
 - **Batería/temperatura no existen en el contenedor** — los sensores viven en

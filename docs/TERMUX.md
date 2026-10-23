@@ -4,9 +4,9 @@
 
 </div>
 
-Todo lo que vive **fuera** del contenedor `arch-arm`, en la app Termux.
+Todo lo que vive **fuera** del contenedor `arch-arm`, en la app Termux, y cómo se despliega el conjunto desde ahí.
 
-Las configs de esta capa **no** se versionan en el repo (viven en la app, se gestionan con `pkg` y no son stow-ables); lo único versionado es este documento. Si reinstalas Termux, esto es lo que hay que rehacer — por eso está documentado aparte.
+La capa Termux está versionada en `termux/` y la aplica `make termux`. Lo que no es versionable (permisos de Android, llaves SSH, la sesión de `gh`) se hace a mano y está indicado en cada sección.
 
 ---
 
@@ -14,7 +14,7 @@ Las configs de esta capa **no** se versionan en el repo (viven en la app, se ges
 
 | Capa | Gestor | Qué controla |
 |------|--------|--------------|
-| **Termux** (esta) | `pkg` | Fuente, colores del terminal, proot-distro, backups |
+| **Termux** (esta) | `pkg` + `make` | Fuente, colores del terminal, proot-distro, entrada al contenedor, selector, backups |
 | **Arch PRoot** (`arch-arm`) | `pacman` | El entorno de desarrollo: zsh, nvim, tmux, yazi, etc. |
 
 Regla mental: **si se ve o se arranca, es Termux. Si se usa, es Arch.**
@@ -22,26 +22,45 @@ Los colores y la fuente los renderiza Termux, aunque el programa corra dentro de
 
 <img src="../assets/divider.svg" alt=""/>
 
-# ❯ Parte 1 — Configuración de Termux
+# ❯ Parte 1 — Despliegue con `make`
 
-## 1.1 Fuente (Nerd Font)
+## 1.1 Prerrequisitos
 
-Sin Nerd Font, los iconos de eza, fastfetch, starship y yazi salen como cuadros vacíos.
+Termux y sus plugins salen de la misma fuente (F-Droid). El repo es privado: se clona con `gh` (HTTPS autenticado).
 
 ```bash
-pkg install -y curl unzip
-
-mkdir -p ~/.termux ~/nf && cd ~/nf
-curl -L -o CascadiaCode.zip \
-  https://github.com/ryanoasis/nerd-fonts/releases/latest/download/CascadiaCode.zip
-unzip -o CascadiaCode.zip
-
-# El nombre exacto del .ttf cambia entre versiones: lo buscamos.
-find . -iname '*NerdFontMono-Regular.ttf' -exec cp {} ~/.termux/font.ttf \;
-
-cd ~ && rm -rf ~/nf
-termux-reload-settings
+pkg update && pkg install gh git make proot-distro curl unzip
+gh auth login
+gh repo clone AlMorRod/PocketArch-ARM ~/PocketArch-ARM
+cd ~/PocketArch-ARM && make
 ```
+
+`make` comprueba esos seis comandos antes de empezar y se niega a correr dentro del contenedor.
+
+## 1.2 Objetivos
+
+| Objetivo | Qué hace |
+|----------|----------|
+| `make termux` | Paquetes (`openssh`, `mosh`), fuente (1.3), paleta (1.4), `termux-setup-storage`, comando `pocketarch` (1.5), bloque en `~/.bashrc` (1.6) y `Host geo` (1.7) |
+| `make container` | Instala `arch-arm` desde el tarball de Arch Linux ARM (Parte 2), comprueba `aarch64` y ejecuta la sonda (1.5) si no hay resultado |
+| `make probe` | Repite la sonda |
+| `make bootstrap` | Ejecuta `scripts/bootstrap.sh` dentro del contenedor (2.4) |
+| `make install` | Sincroniza `~/.pocket-arch` dentro del contenedor desde `~/PocketArch-ARM` y ejecuta `install.sh` |
+| `make` / `make all` | `termux`, `container`, `bootstrap`, `install`, en ese orden |
+
+Todos son idempotentes: lo que ya está hecho se salta.
+
+`make install` usa `scripts/sync-repo.sh`, con la copia de Termux montada en el contenedor (`--bind`):
+
+- **Primera vez:** `git clone --no-hardlinks` en `/root/.pocket-arch` y `origin` apuntando a `git@github.com:AlMorRod/PocketArch-ARM.git`.
+- **Después:** `fetch` + `merge --ff-only`. Si el contenedor tiene commits propios o cambios locales que el merge pisaría, se detiene con un error y no toca nada.
+- Viajan los **commits** de la copia de Termux, no los cambios sin commitear.
+
+---
+
+## 1.3 Fuente (Nerd Font)
+
+Sin Nerd Font, los iconos de eza, fastfetch, starship y yazi salen como cuadros vacíos. `make termux` descarga `CascadiaCode.zip` de las releases de Nerd Fonts y copia `*NerdFontMono-Regular.ttf` a `~/.termux/font.ttf`, solo si ese archivo no existe.
 
 Verificar:
 
@@ -51,103 +70,91 @@ echo "󰣇   "        # si ves cuadros vacíos, la fuente no cargó
 ```
 
 Notas:
-- El archivo se llama `CascadiaCode.zip` (con *c*, la fuente original de Microsoft), pero la fuente parcheada dentro se llama **Caskaydia Cove** (con *k* — Nerd Fonts renombra por licencia). No busques "CaskaydiaCode.zip", no existe.
+- El zip se llama `CascadiaCode.zip` (con *c*, la fuente original de Microsoft), pero la fuente parcheada dentro se llama **Caskaydia Cove** (con *k* — Nerd Fonts renombra por licencia).
 - El archivo **debe** llamarse `font.ttf`. Termux no lee ningún otro nombre.
-- Si el `find` no encuentra nada, lista lo extraído y copia a mano el `.ttf`. La variante *Mono* alinea mejor los iconos.
-- Si Nerd Fonts renombra el asset, el `curl` falla; entonces baja el zip a mano.
+- La variante *Mono* alinea mejor los iconos.
+- Para cambiar de fuente: borra `~/.termux/font.ttf` y repite `make termux`, o copia otro `.ttf` con ese nombre y corre `termux-reload-settings`.
 
 ---
 
-## 1.2 Paleta de colores (Material Monokai)
+## 1.4 Paleta de colores (Material Monokai)
 
-Los 16 colores ANSI los define **Termux**, no el contenedor. Este archivo es lo que alinea `eza`, `bat`, `fastfetch` y todo lo que use ANSI con la identidad visual del proyecto.
-
-Crear `~/.termux/colors.properties`:
-
-```properties
-background=#1e2327
-foreground=#f8f8f2
-cursor=#f8f8f2
-
-color0=#1e2327
-color1=#f92672
-color2=#a6e22e
-color3=#e6db74
-color4=#66d9ef
-color5=#ae81ff
-color6=#66d9ef
-color7=#f8f8f2
-color8=#67757c
-color9=#f92672
-color10=#a6e22e
-color11=#fd971f
-color12=#66d9ef
-color13=#ae81ff
-color14=#66d9ef
-color15=#f8f8f2
-```
-
-Aplicar con `termux-reload-settings` (o cerrar y reabrir Termux).
+Los 16 colores ANSI los define **Termux**, no el contenedor. `termux/colors.properties` es lo que alinea `eza`, `bat`, `fastfetch` y todo lo que use ANSI con la identidad visual del proyecto. `make termux` lo copia a `~/.termux/colors.properties` cuando difiere y aplica con `termux-reload-settings`.
 
 Notas:
 - Mapeo derivado a mano de Material Monokai; **no es un port oficial**.
-- `color11` va a naranja (`#fd971f`). Si en `ls` la columna de usuario resulta chillona, cámbialo a `#e6db74`.
-- *Termux:Styling* da temas desde un menú, pero trae Monokai clásico (`#272822`), no el material. Escribe en este mismo archivo por debajo; si lo usas, sobrescribe después.
+- `color11` va a naranja (`#fd971f`). Si en `ls` la columna de usuario resulta chillona, cámbialo a `#e6db74` en `termux/colors.properties`.
+- *Termux:Styling* escribe en este mismo archivo y trae Monokai clásico (`#272822`), no el material; `make termux` lo vuelve a dejar como en el repo.
 
 ---
 
-## 1.3 Alias y selector de entorno
+## 1.5 `pocketarch`: entrada única al contenedor
 
-Al abrir Termux, pregunta a qué entorno ir. **Arch por defecto tras 5 segundos**, para no pagar fricción diaria por una decisión que casi siempre es la misma.
-
-Termux no trae `~/.bashrc`: hay que crearlo.
+`termux/pocketarch` (enlazado en `$PREFIX/bin/pocketarch`) es el único punto de entrada a `proot-distro login`. Lo usan el Makefile, el alias `arch` y el selector.
 
 ```bash
-# PocketArch — atajo para entrar a Arch en cualquier momento
-alias arch='proot-distro login arch-arm'
-
-# PocketArch — ¿existe el contenedor?
-_pa_has_arch() {
-  command -v proot-distro >/dev/null 2>&1 || return 1
-  proot-distro list -q 2>/dev/null | grep -qx 'arch-arm'
-}
-
-if [ -t 0 ] && [ -z "$POCKETARCH_NO_PROMPT" ] && _pa_has_arch; then
-  _pink=$'\e[38;2;249;38;114m'
-  _green=$'\e[38;2;166;226;46m'
-  _cyan=$'\e[38;2;102;217;239m'
-  _dim=$'\e[38;2;103;117;124m'
-  _bold=$'\e[1m'
-  _r=$'\e[0m'
-
-  printf '\n'
-  printf '   %s%s󰣇  PocketArch%s\n\n' "$_bold" "$_pink" "$_r"
-  printf '   %s%s  Arch%s  %s(arch-arm)%s\n' "$_bold" "$_cyan" "$_r" "$_dim" "$_r"
-  printf '   %s%s  Termux%s %slocal%s\n\n' "$_bold" "$_green" "$_r" "$_dim" "$_r"
-  printf '   %s󰔟  Arch en 5s · pulsa %sn%s %spara quedarte local%s\n\n' "$_dim" "$_r$_green" "$_r$_dim" "$_dim" "$_r"
-  printf '   %s❯%s ' "$_pink" "$_r"
-
-  read -r -t 5 -n 1 _env
-  printf '\n'
-  case "$_env" in
-    n|N) printf '   %s  Termux local%s\n\n' "$_green" "$_r" ;;
-    *) clear; proot-distro login arch-arm ;;
-  esac
-  unset _env _pink _green _cyan _dim _bold _r
-
-elif [ -t 0 ] && [ -z "$POCKETARCH_NO_PROMPT" ]; then
-  printf '\n   \e[38;2;103;117;124m󰣇  arch-arm no encontrado · ver TERMUX.md §2.2\e[0m\n\n'
-fi
-
-unset -f _pa_has_arch
+pocketarch                       # sesión interactiva en arch-arm
+pocketarch -- uname -m           # un comando
+pocketarch --bind A:B -- cmd     # opciones de proot-distro login antes de --
+pocketarch --probe               # repite la sonda (= make probe)
+pocketarch --installed           # código de salida 0 si arch-arm existe
 ```
 
-Notas:
-- **Valida que `arch-arm` exista** antes de preguntar: si no hay contenedor, muestra un aviso tenue y te deja en local. Sin errores durante el setup inicial.
-- `POCKETARCH_NO_PROMPT=1` lo desactiva puntualmente (escotilla de escape).
-- El alias `arch` queda siempre disponible para entrar sin menú.
-- Si el shell por defecto de Termux fuera zsh, el snippet va en `~/.zshrc`.
-- Probar sin cerrar Termux: `bash -i`
+**link2symlink.** proot emula los enlaces duros con symlinks (link2symlink, activa por defecto). En algunos dispositivos esa emulación tumba la sesión con *signal 11* ante cualquier `ln`. Con `--no-link2symlink`, el kernel devuelve EPERM y la sesión sigue. La decisión es por dispositivo:
+
+- **La sonda** ejecuta un `ln` en un directorio temporal del contenedor sin `--no-link2symlink`, y después borra el directorio desde una segunda sesión con `--no-link2symlink` (así se limpia aunque la primera caiga). Guarda el resultado en `~/.config/pocketarch/link2symlink`: `on` si el `ln` funcionó, `off` si no.
+- **`pocketarch`** añade `--no-link2symlink` salvo que ese archivo diga `on`. Sin resultado de sonda, también lo añade: un EPERM es recuperable; una sesión caída, no.
+
+Entra siempre con `arch` o `pocketarch`. Un `proot-distro login arch-arm` a pelo se salta la decisión de la sonda.
+
+---
+
+## 1.6 Alias y selector de arranque
+
+`make termux` mantiene en `~/.bashrc` un bloque entre `# >>> PocketArch >>>` y `# <<< PocketArch <<<` que carga `termux/bashrc.sh`. El bloque se reescribe en cada `make termux`; el resto de `~/.bashrc` no se toca. Si encuentra un selector o un `alias arch=` fuera del bloque, avisa para que lo borres.
+
+`termux/bashrc.sh` define el alias `arch` (= `pocketarch`) y, en un terminal interactivo, muestra el selector:
+
+```
+   󰣇  PocketArch
+
+   g  geofront  mosh geo → tmux main
+   a  Arch      arch-arm
+
+   󰔟  Arch en 5s · Enter = Arch
+```
+
+| Tecla | Destino |
+|-------|---------|
+| `a`, Enter o 5 s sin tecla | Arch (`pocketarch`) |
+| `g` | geofront: `mosh geo -- tmux new -As main`, y si falla `ssh -t geo 'tmux new -As main'` |
+| `t` | Termux local (no figura en el menú) |
+
+- Si mosh y ssh fallan, el selector muestra un aviso y vuelve al menú.
+- Al cerrar la sesión de Arch o de geofront, quedas en el shell de Termux.
+- **Sin `arch-arm` instalado:** el menú ofrece `g` geofront y `t` Termux, con Termux por defecto.
+
+Escotillas:
+- `POCKETARCH_NO_PROMPT=1` → sin menú, Termux local.
+- `~/.no-geo` → sin menú, directo a Arch (`touch ~/.no-geo` para activarla, `rm ~/.no-geo` para quitarla).
+
+Probar sin cerrar Termux: `bash -i`.
+
+---
+
+## 1.7 Alias SSH `geo`
+
+`make termux` añade a `~/.ssh/config`, solo si no existe ya un `Host geo`:
+
+```
+Host geo
+    HostName lotusproject.xyz
+    User tyr
+    ConnectTimeout 5
+    ServerAliveInterval 30
+```
+
+Las llaves no se gestionan: generarlas y autorizarlas en el servidor es un paso manual (`ssh-keygen`, `ssh-copy-id geo`). mosh necesita `mosh-server` en el servidor.
 
 <img src="../assets/divider.svg" alt=""/>
 
@@ -155,14 +162,14 @@ Notas:
 
 ## 2.1 Cómo funcionan las imágenes en proot-distro
 
-En la versión **5.4.0** hay dos formas de instalar:
+proot-distro instala de dos formas:
 
 1. **Por nombre** → `proot-distro install ubuntu:24.04`
    Resuelve contra el registro **OCI/Docker**. Depende de que la imagen publique build para tu arquitectura.
 2. **Por URL de tarball** → `proot-distro install <url.tar.gz>`
    Cualquier rootfs comprimido. Es la vía que usa PocketArch, con la imagen oficial de Arch Linux ARM.
 
-> ⚠ **No existe un comando que liste las distros instalables.** `proot-distro list` solo muestra las que ya tienes. El catálogo "disponible" es, en la práctica, lo que haya en el registro OCI o el tarball que le des.
+> ⚠ **No existe un comando que liste las distros instalables.** `proot-distro list` solo muestra las que ya tienes.
 
 Y el detalle que muerde en ARM:
 
@@ -175,18 +182,20 @@ Arch mainline **solo existe para x86_64**. Correrlo en el teléfono exige `qemu-
 
 ---
 
-## 2.2 Descargar e instalar (Arch Linux ARM)
+## 2.2 Instalar (Arch Linux ARM)
+
+`make container` ejecuta, si `arch-arm` no existe:
 
 ```bash
-pkg install -y proot-distro
-
 proot-distro install --override-alias arch-arm \
   http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
 ```
 
 - `--override-alias arch-arm` le da nombre limpio (si no, lo nombra por la URL).
-- Verás un aviso de que la integridad no se puede verificar: **esperado** con imágenes externas, no es un fallo.
-- La URL es `http` a propósito: el certificado TLS del mirror solo cubre `archlinuxarm.org`, no el subdominio `os.` — con `https` la descarga falla por hostname mismatch (verificado 2026-07). No lo "corrijas".
+- El aviso de que la integridad no se puede verificar es **esperado** con imágenes externas.
+- La URL es `http` a propósito: el certificado TLS del mirror solo cubre `archlinuxarm.org`, no el subdominio `os.`, y con `https` la descarga falla por hostname mismatch.
+
+Después comprueba que `uname -m` sea `aarch64` y ejecuta la sonda de link2symlink (1.5).
 
 ---
 
@@ -200,41 +209,29 @@ proot-distro list
 proot-distro list -q
 
 # ¿Es nativo o emulado?
-proot-distro login arch-arm -- uname -m      # debe decir: aarch64
+pocketarch -- uname -m        # debe decir: aarch64
 
-# Dónde vive el rootfs (5.4.0)
-ls $PREFIX/var/lib/proot-distro/containers/
+# Resultado de la sonda (on / off)
+cat ~/.config/pocketarch/link2symlink
 
-# Cuánto ocupa
-du -sh $PREFIX/var/lib/proot-distro/containers/arch-arm
+# Dónde vive el rootfs y cuánto ocupa
+d=$(find $PREFIX/var/lib/proot-distro -maxdepth 2 -type d -name arch-arm); echo "$d"; du -sh "$d"
 
 # Espacio libre en Termux
 df -h $HOME
 ```
 
-> La ruta cambió: versiones antiguas usaban `installed-rootfs/`, la 5.4.0 usa `containers/`. Si un tutorial te da la vieja, no la busques — usa `find $PREFIX -type d -name arch-arm`.
-
 ---
 
-## 2.4 Bootstrap obligatorio (tras instalar)
+## 2.4 Bootstrap (`make bootstrap`)
 
-Dentro del contenedor, **antes de instalar nada**:
+`scripts/bootstrap.sh` deja pacman operativo bajo PRoot. Lo ejecuta `make bootstrap` desde Termux y lo repite `install.sh` dentro del contenedor:
 
-```bash
-# 1. Llaves de ALARM (usa su propio keyring, no el de Arch mainline)
-pacman-key --init
-pacman-key --populate archlinuxarm
+1. **Keyring de ALARM.** Crea `/etc/pacman.d/gnupg` (modo 755) con un `gpg.conf` que contiene `lock-never` **antes** de `pacman-key --init`, y lo mantiene ahí. Si falta `trustdb.gpg`, ejecuta `pacman-key --init` y `pacman-key --populate archlinuxarm`.
+2. **pacman.conf.** Activa `DisableSandboxFilesystem` y `DisableSandboxSyscalls` en `[options]` (descomenta las líneas de la plantilla), quita un `DisableSandbox` suelto y comenta `DownloadUser`. Se comprueba con `pacman-conf`.
+3. **`pacman -Syu --needed git`.**
 
-# 2. pacman falla bajo PRoot por Landlock: desactivar el sandbox
-sed -i 's/^DownloadUser/#DownloadUser/' /etc/pacman.conf
-grep -q '^DisableSandbox' /etc/pacman.conf || echo 'DisableSandbox' >> /etc/pacman.conf
-
-# 3. Ahora sí
-pacman -Syu
-```
-
-Si te saltas el **1**, cualquier `pacman -S` falla por firma.
-Si te saltas el **2**, falla con `restricting filesystem access failed because Landlock is not supported by the kernel`.
+Sin el **1**, cualquier `pacman -S` falla por firma. Sin el **2**, falla con `restricting filesystem access failed because Landlock is not supported by the kernel`.
 
 ---
 
@@ -243,20 +240,18 @@ Si te saltas el **2**, falla con `restricting filesystem access failed because L
 Se hace **desde Termux**, nunca desde dentro del contenedor.
 
 ```bash
-termux-setup-storage          # una sola vez, crea ~/storage/downloads
+termux-setup-storage          # lo hace make termux; crea ~/storage/downloads
 
 proot-distro backup --output ~/storage/downloads/arch-arm-$(date +%F).tar.gz arch-arm
 ```
 
-> ⚠ Verifica la sintaxis con `proot-distro backup --help` antes de confiar: las banderas cambian entre versiones.
+> ⚠ Antes de confiar en un backup, revisa la sintaxis con `proot-distro backup --help`.
 
-**El backup del contenedor NO incluye la capa Termux.** Guárdala aparte:
+**El backup del contenedor no incluye la capa Termux.** La mayor parte se rehace con `make termux`; lo que no está en el repo se guarda aparte:
 
 ```bash
-tar czf ~/storage/downloads/termux-config-$(date +%F).tar.gz -C ~ .termux .bashrc
+tar czf ~/storage/downloads/termux-config-$(date +%F).tar.gz -C ~ .ssh .config/pocketarch
 ```
-
-Eso preserva `font.ttf`, `colors.properties` y el selector.
 
 ---
 
@@ -273,7 +268,7 @@ proot-distro reset arch-arm
 proot-distro remove arch-arm
 ```
 
-`reset` y `remove` **borran todo lo no versionado**. Antes de cualquiera de los dos: confirma que tu repo de dotfiles esté pusheado.
+`reset` y `remove` **borran todo lo no versionado**. Antes de cualquiera de los dos, confirma que los commits del contenedor estén en GitHub o en `~/PocketArch-ARM`. Después de `reset`, `make bootstrap install` reconstruye el entorno. Después de `remove`, `make container bootstrap install`.
 
 ---
 
@@ -281,44 +276,40 @@ proot-distro remove arch-arm
 
 No confundir dos cosas que suenan igual:
 
-- **`~/.pocket-arch` + `install.sh` (dentro de Arch)** → la **receta**. Versionada, legible, evoluciona. Es cómo se replica PocketArch de verdad.
+- **El repo + `make`** → la **receta**. Versionada, legible, evoluciona. Es cómo se replica PocketArch de verdad.
 - **`proot-distro backup` (tar.gz)** → el **paracaídas**. Foto opaca y pesada de un momento. Sirve si el contenedor se corrompe y no quieres reconstruir.
 
 La receta es el plan. La imagen es el respaldo. No sustituyas una por la otra.
 
 <img src="../assets/divider.svg" alt=""/>
 
-# ❯ Parte 3 — Primeros pasos con Claude Code *(opcional)*
+# ❯ Parte 3 — Claude Code
 
-## 3.1 Por qué lo agregamos
+## 3.1 Por qué está en PocketArch
 
-PocketArch funciona perfectamente sin esto. Se añadió por una razón concreta: **evitar hacer el trabajo dos veces.**
+PocketArch funciona perfectamente sin Claude Code. Está aquí por una razón concreta: **evitar hacer el trabajo dos veces.**
 
 El entorno se puede configurar a mano, siguiendo una guía y editando cada archivo con `nano`. Pero entonces la config queda escrita suelta en `~/.config`, y luego hay que rehacerla para meterla en el repo de dotfiles. Config a mano ≠ config reproducible.
 
-Claude Code ejecuta las fases del plan escribiendo cada archivo **directo en `~/.pocket-arch`** y enlazándolo con `stow`. Un solo flujo: configurado y versionado a la vez. Además el contenedor es aislado y desechable (`proot-distro reset`), así que darle permisos amplios tiene un costo bajo.
-
-Es opcional: si prefieres configurar a mano, salta esta parte y trabaja siempre dentro del repo de dotfiles.
+Claude Code escribe cada archivo **directo en `~/.pocket-arch`** y lo enlaza con `stow`. Un solo flujo: configurado y versionado a la vez. Además el contenedor es aislado y desechable (`proot-distro reset`), así que darle permisos amplios tiene un costo bajo.
 
 ---
 
 ## 3.2 Instalación (dentro del contenedor)
 
-Node viene de `pacman`; Claude Code de `npm`:
+`install.sh` instala Claude Code con el instalador nativo si falta `~/.local/bin/claude`:
 
 ```bash
-pacman -S nodejs npm
-node --version                          # debe ser >= 18
-
-npm install -g @anthropic-ai/claude-code
+curl -fsSL https://claude.ai/install.sh | bash
 claude --version
-claude doctor                           # verifica node, ripgrep, red y auth
+claude doctor                           # verifica instalación, red y auth
 ```
 
 Notas:
-- **Sin `sudo`**: en PRoot ya eres root, y `npm -g` escribe sin problema.
-- ALARM es **glibc**, así que el ripgrep incluido funciona sin workarounds.
-- Actualizar: `npm install -g @anthropic-ai/claude-code@latest`
+- El binario queda en `~/.local/bin/claude`. `install.sh` añade ese directorio al `PATH` de su propia ejecución y `exports.zsh` lo hace persistente.
+- Se actualiza solo; no depende de `npm` ni de `pacman`.
+- **Sin `sudo`**: en PRoot ya eres root.
+- ALARM es **glibc**, así que el binario nativo funciona sin workarounds.
 
 ---
 
@@ -346,15 +337,17 @@ En esa carpeta van `CLAUDE.md` (contexto y permisos del contenedor) y `PocketArc
 
 ---
 
-## 3.5 Nota de reproducibilidad
+## 3.5 Reproducibilidad
 
-Claude Code es un paquete **npm-global, no pacman**: **no aparece en `packages.txt`**.
-Debe ir explícitamente en el `install.sh` del repo de dotfiles, o reconstruirás un entorno sin la herramienta que lo construyó.
+Claude Code no es un paquete de `pacman`: **no aparece en `packages.txt`**. Lo instala `install.sh` con el instalador nativo, así que un despliegue con `make` reconstruye el entorno con la herramienta incluida. La config versionada (tema, statusline, `settings.json`) llega por el paquete stow `claude`.
 
 <img src="../assets/divider.svg" alt=""/>
 
 # ❯ Gotchas de esta capa
 
+- **link2symlink tumba la sesión en algunos dispositivos** — proot emula los enlaces duros y, en algunos kernels, cualquier `ln` termina en *signal 11*. Con `--no-link2symlink` el `ln` devuelve EPERM y la sesión sigue. La sonda de `make container` decide por dispositivo y `pocketarch` aplica la decisión (1.5). Los clones locales usan `git clone --no-hardlinks`.
+- **`pacman-key --init` cae con signal 11** — gpg crea sus archivos de bloqueo con enlaces duros. `lock-never` en `/etc/pacman.d/gnupg/gpg.conf`, escrito antes del `--init` y mantenido después, lo evita. El keyring está completo cuando existe `trustdb.gpg`, no cuando existe el directorio (2.4).
+- **Sandbox de pacman** — la plantilla de `pacman.conf` trae `DisableSandboxFilesystem` y `DisableSandboxSyscalls` comentadas en `[options]`. PocketArch las activa; `DisableSandbox` es la forma abreviada de las dos. Comprobación: `pacman-conf | grep DisableSandbox` debe listar ambas (2.4).
 - **Plugins de Termux (`Termux:API`, `Termux:Styling`) deben venir de la misma fuente que Termux** (F-Droid o donde lo instalaste). Si no, fallan por firma.
 - **Sensores (batería, temperatura)** requieren la app `Termux:API` + el paquete `termux-api`. Viven aquí, **no** en el contenedor. Por eso Fastfetch dentro de Arch no los muestra.
 - **`qemu-user-x86-64`** solo hace falta para contenedores x86 emulados. Con `arch-arm` nativo es innecesario: `pkg uninstall qemu-user-x86-64`.
@@ -365,11 +358,8 @@ Debe ir explícitamente en el `install.sh` del repo de dotfiles, o reconstruirá
 # ❯ Reinstalación desde cero (checklist)
 
 1. Instalar Termux + plugins desde la misma fuente.
-2. `pkg install -y proot-distro curl unzip`
-3. `termux-setup-storage`
-4. Fuente y colores: restaurar `~/.termux/` desde el tar, **o** rehacerlos con 1.1 y 1.2.
-5. `termux-reload-settings`
-6. Contenedor: `proot-distro restore <backup.tar.gz>` **o** instalarlo limpio (2.2) + bootstrap (2.4).
-7. Dentro del contenedor: clonar el repo de dotfiles y correr `install.sh`.
-8. *(Opcional)* Claude Code (3.2) y su `settings.json` de permisos (3.3).
-9. Alias + selector de entorno en `~/.bashrc` (1.3).
+2. Prerrequisitos y clon (1.1): `pkg install gh git make proot-distro curl unzip`, `gh auth login`, `gh repo clone AlMorRod/PocketArch-ARM ~/PocketArch-ARM`.
+3. Contenedor desde backup *(opcional)*: `proot-distro restore <backup.tar.gz>`.
+4. `cd ~/PocketArch-ARM && make`.
+5. Llaves SSH para `geo` (1.7), si no vienen del backup de `~/.ssh`.
+6. Dentro del contenedor: `gh auth login` (SSH) para poder hacer push, y `/theme` en Claude Code (README, Claude Code).
