@@ -44,7 +44,7 @@ root=${root%/}
 if [ "$all" -eq 1 ]; then
 	# pacman -Qk sale con error si falta algo; el resumen va a stdout.
 	mapfile -t pkgs < <(pacman -Qk 2>/dev/null |
-		awk '/ missing files$/ && !/ 0 missing files$/ { sub(/:.*/, ""); print }' || true)
+		awk '/ missing files?$/ && !/ 0 missing files$/ { sub(/:.*/, ""); print }' || true)
 elif [ ${#pkgs[@]} -eq 0 ] && [ ! -t 0 ]; then
 	mapfile -t pkgs
 fi
