@@ -1,53 +1,67 @@
 # PocketArch — alias y selector de arranque de Termux.
 # Lo carga el bloque gestionado de ~/.bashrc (make termux).
 #
-# Menú: g geofront · a Arch (por defecto a los 5 s). La tecla t queda en
-# Termux local sin figurar en el menú. Sin contenedor: g geofront · t Termux
-# (por defecto). Escotillas: POCKETARCH_NO_PROMPT=1 (sin menú, Termux local)
-# y ~/.no-geo (sin menú, directo a Arch).
+# El selector solo aparece cuando existe ~/.config/pocketarch/ready, que
+# escribe un `make install` completo. Sin la marca: un aviso de una línea con
+# el paso que falta y shell de Termux. Con la marca: g geofront · a Arch (por
+# defecto a los 5 s); la tecla t queda en Termux local sin figurar en el menú.
+# Escotillas: POCKETARCH_NO_PROMPT=1 (sin menú, Termux local) y ~/.no-geo
+# (sin menú, directo a Arch). Salir de Arch con error o por señal vuelve a
+# la shell de Termux.
 
 alias arch='pocketarch'
+
+_PA_REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+_PA_READY="${XDG_CONFIG_HOME:-$HOME/.config}/pocketarch/ready"
 
 _pa_geo() {
 	mosh geo -- tmux new -As main || ssh -t geo 'tmux new -As main'
 }
 
+_pa_arch() {
+	local pink=$'\e[38;2;249;38;114m' r=$'\e[0m' rc=0
+	clear
+	pocketarch || rc=$?
+	if [ "$rc" -gt 128 ]; then
+		printf '\n   %s  Arch terminó por señal %s (%d) · sigues en Termux%s\n\n' \
+			"$pink" "$(kill -l "$((rc - 128))" 2>/dev/null || echo '?')" "$rc" "$r"
+	elif [ "$rc" -ne 0 ]; then
+		printf '\n   %s  Arch salió con código %d · sigues en Termux%s\n\n' "$pink" "$rc" "$r"
+	fi
+	return 0
+}
+
 _pa_select() {
-	local pink=$'\e[38;2;249;38;114m' green=$'\e[38;2;166;226;46m'
-	local cyan=$'\e[38;2;102;217;239m' purple=$'\e[38;2;174;129;255m'
-	local dim=$'\e[38;2;103;117;124m' bold=$'\e[1m' r=$'\e[0m'
-	local has_arch=0 def key
+	local pink=$'\e[38;2;249;38;114m' cyan=$'\e[38;2;102;217;239m'
+	local purple=$'\e[38;2;174;129;255m' dim=$'\e[38;2;103;117;124m'
+	local bold=$'\e[1m' r=$'\e[0m' key step
 
-	pocketarch --installed && has_arch=1
-
-	if [ -e "$HOME/.no-geo" ]; then
-		if [ "$has_arch" -eq 1 ]; then
-			clear
-			pocketarch
-		else
-			printf '\n   %s󰣇  arch-arm no instalado · make container%s\n\n' "$dim" "$r"
-		fi
+	if ! pocketarch --installed; then
+		step="make container"
+	elif [ ! -e "$_PA_READY" ]; then
+		step="make install"
+	fi
+	if [ -n "${step:-}" ]; then
+		printf '%s󰣇  Arch no está listo: falta cd %s && %s%s\n' "$dim" "${_PA_REPO/#$HOME/\~}" "$step" "$r"
 		return
 	fi
 
-	if [ "$has_arch" -eq 1 ]; then def=a; else def=t; fi
+	if [ -e "$HOME/.no-geo" ]; then
+		_pa_arch
+		return
+	fi
 
 	while :; do
 		printf '\n   %s%s󰣇  PocketArch%s\n\n' "$bold" "$pink" "$r"
 		printf '   %s%sg  geofront%s  %smosh geo → tmux main%s\n' "$bold" "$purple" "$r" "$dim" "$r"
-		if [ "$has_arch" -eq 1 ]; then
-			printf '   %s%sa  Arch%s      %sarch-arm%s\n\n' "$bold" "$cyan" "$r" "$dim" "$r"
-			printf '   %s󰔟  Arch en 5s · Enter = Arch%s\n\n' "$dim" "$r"
-		else
-			printf '   %s%st  Termux%s    %slocal%s\n\n' "$bold" "$green" "$r" "$dim" "$r"
-			printf '   %s󰔟  Termux en 5s · arch-arm no instalado (make container)%s\n\n' "$dim" "$r"
-		fi
+		printf '   %s%sa  Arch%s      %sarch-arm%s\n\n' "$bold" "$cyan" "$r" "$dim" "$r"
+		printf '   %s󰔟  Arch en 5s · Enter = Arch%s\n\n' "$dim" "$r"
 		printf '   %s❯%s ' "$pink" "$r"
 
 		key=
 		read -r -s -t 5 -n 1 key || true
 		printf '\n'
-		[ -n "$key" ] || key=$def
+		[ -n "$key" ] || key=a
 
 		case "$key" in
 		g | G)
@@ -56,13 +70,10 @@ _pa_select() {
 			printf '\n   %s  geofront no responde (mosh y ssh fallaron)%s\n' "$pink" "$r"
 			;;
 		a | A)
-			[ "$has_arch" -eq 1 ] || continue
-			clear
-			pocketarch
+			_pa_arch
 			return
 			;;
 		t | T)
-			printf '   %s  Termux local%s\n\n' "$green" "$r"
 			return
 			;;
 		esac
