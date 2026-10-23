@@ -1,0 +1,13 @@
+# PocketArch — recrea los enlaces duros que proot impide extraer.
+# Lo instala scripts/bootstrap.sh en /etc/pacman.d/hooks.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = *
+
+[Action]
+Description = Recreando enlaces duros que faltan (PRoot)...
+When = PostTransaction
+Exec = /usr/local/bin/pocketarch-fix-hardlinks
+NeedsTargets
