@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # PocketArch — instalación idempotente.
 # Reconstruye el entorno en un contenedor arch-arm limpio: pacman-key,
-# paquetes de packages.txt, symlinks vía stow, shell por defecto y
-# bootstrap de plugins de Neovim. Re-ejecutable sin romper nada.
+# paquetes de packages.txt, symlinks vía stow, shell por defecto, Claude
+# Code y bootstrap de plugins de Neovim. Re-ejecutable sin romper nada.
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,7 +48,18 @@ if [ "$login_shell" != "$zsh_path" ]; then
 	chsh -s "$zsh_path"
 fi
 
-# --- 7. Bootstrap de plugins de Neovim (LazyVim) ---
+# --- 7. Claude Code (instalador nativo, fuera de pacman) ---
+# Queda en ~/.local/bin/claude y se actualiza solo; no figura en packages.txt.
+export PATH="$HOME/.local/bin:$PATH"
+if [ ! -x "$HOME/.local/bin/claude" ]; then
+	echo "==> Instalando Claude Code (instalador nativo)"
+	if ! curl -fsSL https://claude.ai/install.sh | bash; then
+		echo "AVISO: la instalación de Claude Code falló (¿sin red?). Reintenta con:" >&2
+		echo "       curl -fsSL https://claude.ai/install.sh | bash" >&2
+	fi
+fi
+
+# --- 8. Bootstrap de plugins de Neovim (LazyVim) ---
 # Mason (LSP/formatters por lenguaje) se instala solo, la primera vez que
 # abrís un archivo de cada lenguaje (ensure_installed en cada lang-*.lua).
 echo "==> Sincronizando plugins de Neovim (puede tardar, necesita red)"
