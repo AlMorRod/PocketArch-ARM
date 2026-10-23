@@ -1,3 +1,11 @@
 *.swp
 *.bak
 .zsh_history
+
+# Claude Code: ~/.claude apunta a claude/.claude (stow con folding), así que
+# su estado en ejecución (credenciales, sesiones, caché) cae aquí. Solo se
+# versiona la config.
+claude/.claude/*
+!claude/.claude/themes/
+!claude/.claude/statusline.sh
+!claude/.claude/settings.json
