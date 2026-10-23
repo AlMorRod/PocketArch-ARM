@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 # PocketArch — instalación idempotente.
-# Reconstruye el entorno en un contenedor arch-arm limpio: pacman-key,
-# paquetes de packages.txt, symlinks vía stow, shell por defecto, Claude
-# Code y bootstrap de plugins de Neovim. Re-ejecutable sin romper nada.
+# Reconstruye el entorno en un contenedor arch-arm limpio: bootstrap de
+# pacman, paquetes de packages.txt, symlinks vía stow, shell por defecto,
+# Claude Code, plugins, parsers y herramientas de Neovim, y verificación
+# final de pacman. Re-ejecutable sin romper nada.
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DOTFILES_DIR"
+# shellcheck source=scripts/lib-pacman-check.sh
+. "$DOTFILES_DIR/scripts/lib-pacman-check.sh"
+
+# PATH sin Termux ni Android: los parsers de Treesitter se compilan con el
+# gcc del contenedor, no con el clang de Termux.
+export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin"
+export CC=gcc
 
 die() {
 	echo "ERROR: $*" >&2
@@ -18,7 +26,9 @@ die() {
 command -v pacman >/dev/null || die "pacman no encontrado; ¿estás dentro del contenedor arch-arm?"
 [ -f "$DOTFILES_DIR/packages.txt" ] || die "falta $DOTFILES_DIR/packages.txt (¿clon incompleto?)"
 [ -s "$DOTFILES_DIR/packages.txt" ] || die "$DOTFILES_DIR/packages.txt está vacío"
-[ -f "$DOTFILES_DIR/scripts/bootstrap.sh" ] || die "falta $DOTFILES_DIR/scripts/bootstrap.sh (¿clon incompleto?)"
+for f in bootstrap.sh nvim-bootstrap.lua; do
+	[ -f "$DOTFILES_DIR/scripts/$f" ] || die "falta $DOTFILES_DIR/scripts/$f (¿clon incompleto?)"
+done
 
 echo "==> PocketArch install (${DOTFILES_DIR})"
 
@@ -50,7 +60,6 @@ fi
 
 # --- 7. Claude Code (instalador nativo, fuera de pacman) ---
 # Queda en ~/.local/bin/claude y se actualiza solo; no figura en packages.txt.
-export PATH="$HOME/.local/bin:$PATH"
 if [ ! -x "$HOME/.local/bin/claude" ]; then
 	echo "==> Instalando Claude Code (instalador nativo)"
 	if ! curl -fsSL https://claude.ai/install.sh | bash; then
@@ -59,13 +68,18 @@ if [ ! -x "$HOME/.local/bin/claude" ]; then
 	fi
 fi
 
-# --- 8. Bootstrap de plugins de Neovim (LazyVim) ---
-# Mason (LSP/formatters por lenguaje) se instala solo, la primera vez que
-# abrís un archivo de cada lenguaje (ensure_installed en cada lang-*.lua).
-echo "==> Sincronizando plugins de Neovim (puede tardar, necesita red)"
-if ! nvim --headless "+Lazy! sync" +qa; then
-	echo "AVISO: 'Lazy! sync' falló (¿sin red?). El entorno queda usable;" >&2
-	echo "       abre nvim manualmente y corre :Lazy sync para completar." >&2
+# --- 8. Neovim: plugins, parsers de Treesitter y paquetes de Mason ---
+# `Lazy! sync` sale antes de que Treesitter y Mason terminen; el script Lua
+# espera a ambos. Un parser que falte hace fallar la instalación; un paquete
+# de Mason que falte solo avisa (LazyVim lo reintenta al abrir nvim).
+if [ "$(command -v gcc)" != /usr/bin/gcc ] || ! gcc --version >/dev/null; then
+	die "/usr/bin/gcc no funciona (¿enlaces duros sin reparar? pocketarch-fix-hardlinks --all)"
 fi
+echo "==> Neovim: plugins, Treesitter y Mason (puede tardar, necesita red)"
+nvim --headless "+Lazy! sync" "+luafile $DOTFILES_DIR/scripts/nvim-bootstrap.lua" ||
+	die "Neovim incompleto; reintenta: nvim --headless \"+Lazy! sync\" \"+luafile $DOTFILES_DIR/scripts/nvim-bootstrap.lua\""
+
+# --- 9. Verificación ---
+pacman_check || die "instalación incompleta"
 
 echo "==> Listo. Abrí una shell nueva (o 'exec zsh') para que tome efecto."
