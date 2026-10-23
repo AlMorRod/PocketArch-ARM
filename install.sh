@@ -18,27 +18,12 @@ die() {
 command -v pacman >/dev/null || die "pacman no encontrado; ¿estás dentro del contenedor arch-arm?"
 [ -f "$DOTFILES_DIR/packages.txt" ] || die "falta $DOTFILES_DIR/packages.txt (¿clon incompleto?)"
 [ -s "$DOTFILES_DIR/packages.txt" ] || die "$DOTFILES_DIR/packages.txt está vacío"
+[ -f "$DOTFILES_DIR/scripts/bootstrap.sh" ] || die "falta $DOTFILES_DIR/scripts/bootstrap.sh (¿clon incompleto?)"
 
 echo "==> PocketArch install (${DOTFILES_DIR})"
 
-# --- 1. Keyring de Arch Linux ARM (idempotente: solo si no existe) ---
-if [ ! -d /etc/pacman.d/gnupg ]; then
-	echo "==> Inicializando pacman-key (archlinuxarm)"
-	pacman-key --init
-	pacman-key --populate archlinuxarm
-fi
-
-# --- 2. pacman.conf: DisableSandbox activo, DownloadUser comentado ---
-# (Landlock no existe bajo PRoot; sin DisableSandbox, pacman falla.)
-if ! grep -q "^DisableSandbox" /etc/pacman.conf; then
-	echo "==> Activando DisableSandbox en /etc/pacman.conf"
-	sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
-fi
-sed -i 's/^DownloadUser/#DownloadUser/' /etc/pacman.conf
-
-# --- 3. Sync + upgrade del sistema ---
-echo "==> pacman -Syu"
-pacman -Syu --noconfirm
+# --- 1-3. Bootstrap: keyring, pacman.conf y pacman -Syu ---
+bash "$DOTFILES_DIR/scripts/bootstrap.sh"
 
 # --- 4. Paquetes de packages.txt (--needed: idempotente, no reinstala) ---
 echo "==> Instalando paquetes de packages.txt"
