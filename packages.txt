@@ -15,8 +15,6 @@ git
 github-cli
 jq
 lazygit
-linux-aarch64
-linux-firmware
 make
 nano
 neovim
