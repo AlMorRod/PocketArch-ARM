@@ -4,11 +4,15 @@
 #   make termux     paquetes, fuente, paleta, almacenamiento, ~/.bashrc, ~/.ssh/config
 #   make container  instala arch-arm (tarball ALARM), comprueba aarch64
 #   make probe      diagnóstico: sonda de link2symlink (no cambia nada)
-#   make bootstrap  keyring, pacman.conf y pacman -Syu dentro del contenedor
-#   make install    sincroniza el repo dentro del contenedor y corre install.sh
+#   make bootstrap  repara pacman, keyring, sin kernel, pacman -Syu y verificación
+#   make install    sincroniza el repo, corre install.sh y activa el selector
+#   make shell      abre el contenedor (pocketarch)
 #
 # Se ejecuta en Termux desde la copia del repo (~/PocketArch-ARM). Cada
-# objetivo es idempotente. Al contenedor se entra siempre con termux/pocketarch.
+# objetivo es idempotente y guarda su salida en ~/.cache/pocketarch/OBJETIVO.log.
+# Al contenedor se entra siempre con termux/pocketarch. La marca
+# ~/.config/pocketarch/ready (selector con Arch) se borra al empezar
+# bootstrap e install y solo la escribe un install completo.
 
 PREFIX ?= /data/data/com.termux/files/usr
 SHELL := $(firstword $(wildcard $(PREFIX)/bin/bash) /bin/bash)
@@ -27,21 +31,45 @@ PKGS := openssh mosh
 SRC_MNT := /mnt/pocketarch-src
 DEST := /root/.pocket-arch
 REMOTE := git@github.com:AlMorRod/PocketArch-ARM.git
+MAKEFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
+LOGGED := termux container probe bootstrap install
+LOGDIR = $${XDG_CACHE_HOME:-$$HOME/.cache}/pocketarch
+READY = $${XDG_CONFIG_HOME:-$$HOME/.config}/pocketarch/ready
 
-.PHONY: all check termux container probe bootstrap install help
+.PHONY: all check help shell $(LOGGED) $(addprefix _,$(LOGGED))
 
 all: termux container bootstrap install
 
 help:
-	@sed -n '3,9s/^# \{0,1\}//p' $(firstword $(MAKEFILE_LIST))
+	@sed -n '3,9s/^# \{0,1\}//p' "$(MAKEFILE)"
+
+# Cada objetivo público corre su gemelo _OBJETIVO con la salida en
+# LOGDIR/OBJETIVO.log; pipefail conserva su código de salida.
+$(LOGGED): check
+	@mkdir -p "$(LOGDIR)"
+	$(MAKE) --no-print-directory -f "$(MAKEFILE)" _$@ 2>&1 | tee "$(LOGDIR)/$@.log"
+
+shell: check
+	@"$(PA)" --installed || { echo "ERROR: $(ALIAS) no existe (make container)" >&2; exit 1; }
+	exec "$(PA)"
 
 check:
 	@[ -x "$(PREFIX)/bin/pkg" ] || { echo "ERROR: make se ejecuta en Termux, no dentro del contenedor" >&2; exit 1; }
+	# Termux sin actualizar: libcurl más nuevo que openssl y git/gh/curl no
+	# arrancan (símbolo SSL_* sin resolver).
+	for c in git gh curl; do
+		command -v "$$c" >/dev/null || continue
+		if ! out=$$("$$c" --version 2>&1); then
+			echo "ERROR: $$c no arranca: $$(printf '%s\n' "$$out" | head -n 1)" >&2
+			echo "       Termux sin actualizar: ejecuta termux-change-repo y pkg upgrade (README, paso 0)" >&2
+			exit 1
+		fi
+	done
 	missing=
 	for c in $(PREREQS); do command -v "$$c" >/dev/null || missing="$$missing $$c"; done
 	[ -z "$$missing" ] || { echo "ERROR: faltan prerrequisitos:$$missing (pkg install$$missing)" >&2; exit 1; }
 
-termux: check
+_termux:
 	@missing=
 	for p in $(PKGS); do dpkg -s "$$p" >/dev/null 2>&1 || missing="$$missing $$p"; done
 	if [ -n "$$missing" ]; then echo "==> pkg install$$missing"; pkg install -y $$missing; fi
@@ -98,7 +126,7 @@ termux: check
 			'    ConnectTimeout 5' '    ServerAliveInterval 30' >>"$$cfg"
 	fi
 
-container: check
+_container:
 	@if ! "$(PA)" --installed; then
 		echo "==> Instalando $(ALIAS) desde el tarball de Arch Linux ARM"
 		proot-distro install --override-alias "$(ALIAS)" "$(TARBALL)"
@@ -107,15 +135,21 @@ container: check
 	[ "$$arch" = aarch64 ] || { echo "ERROR: $(ALIAS) es $$arch, se esperaba aarch64" >&2; exit 1; }
 	echo "==> $(ALIAS): aarch64"
 
-probe: check
+_probe:
 	@"$(PA)" --probe
 
-bootstrap: check
+_bootstrap:
 	@"$(PA)" --installed || { echo "ERROR: $(ALIAS) no existe (make container)" >&2; exit 1; }
+	rm -f "$(READY)"
 	"$(PA)" --bind "$(REPO):$(SRC_MNT)" -- bash "$(SRC_MNT)/scripts/bootstrap.sh"
 
-install: check
+_install:
 	@"$(PA)" --installed || { echo "ERROR: $(ALIAS) no existe (make container)" >&2; exit 1; }
+	rm -f "$(READY)"
 	"$(PA)" --bind "$(REPO):$(SRC_MNT)" -- \
 		bash "$(SRC_MNT)/scripts/sync-repo.sh" "$(SRC_MNT)" "$(DEST)" "$(REMOTE)"
 	"$(PA)" -- bash "$(DEST)/install.sh"
+	"$(PA)" -- true || { echo "ERROR: $(ALIAS) no responde tras install.sh" >&2; exit 1; }
+	mkdir -p "$$(dirname "$(READY)")"
+	touch "$(READY)"
+	echo "==> Arch listo: el selector de Termux lo ofrece desde la próxima sesión"
