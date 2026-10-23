@@ -1,13 +1,15 @@
 # PocketArch — alias y selector de arranque de Termux.
 # Lo carga el bloque gestionado de ~/.bashrc (make termux).
 #
-# El selector solo aparece cuando existe ~/.config/pocketarch/ready, que
-# escribe un `make install` completo. Sin la marca: un aviso de una línea con
-# el paso que falta y shell de Termux. Con la marca: g geofront · a Arch (por
-# defecto a los 5 s); la tecla t queda en Termux local sin figurar en el menú.
+# Termux solo elige destino. El selector solo aparece cuando existe
+# ~/.config/pocketarch/ready, que escribe un `make install` completo. Sin la
+# marca: un aviso de una línea con el paso que falta y shell de Termux. Con
+# la marca: g geofront · a Arch (por defecto a los 5 s); la tecla t queda en
+# Termux local sin figurar en el menú. Al salir de geofront se entra a Arch.
+# Al salir de Arch con código 0 se cierra la sesión de Termux; con error o
+# por señal se muestra el motivo y se conserva la shell de Termux.
 # Escotillas: POCKETARCH_NO_PROMPT=1 (sin menú, Termux local) y ~/.no-geo
-# (sin menú, directo a Arch). Salir de Arch con error o por señal vuelve a
-# la shell de Termux.
+# (sin menú, directo a Arch).
 
 alias arch='pocketarch'
 
@@ -18,14 +20,17 @@ _pa_geo() {
 	mosh geo -- tmux new -As main || ssh -t geo 'tmux new -As main'
 }
 
+# Entra a Arch. Salida limpia: cierra la sesión de Termux. Error o señal:
+# muestra el motivo y vuelve a la shell de Termux.
 _pa_arch() {
 	local pink=$'\e[38;2;249;38;114m' r=$'\e[0m' rc=0
 	clear
 	pocketarch || rc=$?
+	[ "$rc" -eq 0 ] && exit 0
 	if [ "$rc" -gt 128 ]; then
 		printf '\n   %s  Arch terminó por señal %s (%d) · sigues en Termux%s\n\n' \
 			"$pink" "$(kill -l "$((rc - 128))" 2>/dev/null || echo '?')" "$rc" "$r"
-	elif [ "$rc" -ne 0 ]; then
+	else
 		printf '\n   %s  Arch salió con código %d · sigues en Termux%s\n\n' "$pink" "$rc" "$r"
 	fi
 	return 0
@@ -66,7 +71,10 @@ _pa_select() {
 		case "$key" in
 		g | G)
 			clear
-			_pa_geo && return
+			if _pa_geo; then
+				[ -e "$_PA_READY" ] && _pa_arch
+				return
+			fi
 			printf '\n   %s  geofront no responde (mosh y ssh fallaron)%s\n' "$pink" "$r"
 			;;
 		a | A)
