@@ -6,10 +6,13 @@
 #   pocketarch --probe                             sonda de link2symlink
 #   pocketarch --installed                         ¿existe el contenedor?
 #
-# La emulación de enlaces duros de proot (link2symlink) tumba la sesión con
-# signal 11 en algunos dispositivos. La sonda guarda en $STATE "on" si
-# funciona u "off" si no; sin resultado se asume "off" (con
-# --no-link2symlink un `ln` devuelve EPERM en vez de tumbar la sesión).
+# Se entra siempre con --no-link2symlink: la emulación de enlaces duros de
+# proot tumba la sesión con signal 11 aunque la sonda la dé por buena. Sin
+# ella el kernel devuelve EPERM al crear un enlace duro y los que faltan en
+# los paquetes los repara el hook de pacman (scripts/fix-hardlinks.sh).
+# La sonda es solo diagnóstico: guarda on/off en $STATE y nada lo lee.
+#
+# Un comando tras -- corre con PATH limpio (sin Termux ni Android).
 set -euo pipefail
 
 ALIAS=arch-arm
@@ -39,10 +42,10 @@ probe() {
 	mkdir -p "$(dirname "$STATE")"
 	if [ "$rc" -eq 0 ]; then
 		echo on >"$STATE"
-		echo "==> link2symlink funciona: se usa la opción por defecto"
+		echo "==> link2symlink responde (solo diagnóstico; se entra igual con --no-link2symlink)"
 	else
 		echo off >"$STATE"
-		echo "==> link2symlink falla (salida $rc): se usa --no-link2symlink"
+		echo "==> link2symlink falla (salida $rc)"
 	fi
 }
 
@@ -56,13 +59,12 @@ case "${1:-}" in
 	exit
 	;;
 -h | --help)
-	sed -n '2,12s/^# \{0,1\}//p' "$0"
+	sed -n '2,15s/^# \{0,1\}//p' "$0"
 	exit
 	;;
 esac
 
-flags=(--no-link2symlink)
-[ "$(cat "$STATE" 2>/dev/null)" = on ] && flags=()
+CLEAN_PATH=/usr/local/sbin:/usr/local/bin:/usr/bin
 
 opts=()
 while [ $# -gt 0 ] && [ "$1" != -- ]; do
@@ -70,4 +72,9 @@ while [ $# -gt 0 ] && [ "$1" != -- ]; do
 	shift
 done
 
-exec proot-distro login "${flags[@]}" "${opts[@]}" "$ALIAS" "$@"
+if [ $# -gt 1 ]; then
+	shift
+	exec proot-distro login --no-link2symlink "${opts[@]}" "$ALIAS" -- \
+		/usr/bin/env PATH="$CLEAN_PATH" "$@"
+fi
+exec proot-distro login --no-link2symlink "${opts[@]}" "$ALIAS"

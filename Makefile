@@ -2,8 +2,8 @@
 #
 #   make            = make all
 #   make termux     paquetes, fuente, paleta, almacenamiento, ~/.bashrc, ~/.ssh/config
-#   make container  instala arch-arm (tarball ALARM), comprueba aarch64, sonda
-#   make probe      repite la sonda de link2symlink
+#   make container  instala arch-arm (tarball ALARM), comprueba aarch64
+#   make probe      diagnóstico: sonda de link2symlink (no cambia nada)
 #   make bootstrap  keyring, pacman.conf y pacman -Syu dentro del contenedor
 #   make install    sincroniza el repo dentro del contenedor y corre install.sh
 #
@@ -106,8 +106,6 @@ container: check
 	arch=$$("$(PA)" -- uname -m | tr -d '\r' | tail -n 1)
 	[ "$$arch" = aarch64 ] || { echo "ERROR: $(ALIAS) es $$arch, se esperaba aarch64" >&2; exit 1; }
 	echo "==> $(ALIAS): aarch64"
-	state="$${XDG_CONFIG_HOME:-$$HOME/.config}/pocketarch/link2symlink"
-	[ -f "$$state" ] || "$(PA)" --probe
 
 probe: check
 	@"$(PA)" --probe
